@@ -31,8 +31,17 @@
     const SUPABASE_URL = "https://kyxsxnxszpocszlmrpdb.supabase.co";  // Replace with your Supabase URL
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5eHN4bnhzenBvY3N6bG1ycGRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMDQ1NzYsImV4cCI6MjA2MDY4MDU3Nn0.ANiq24mu1Pu2oA7Y2z-EzmCJUT1MZt4kyV7Hm8edm6s";  // Replace with your public API key
 
+
+
+
     // Initialize the Supabase client
     const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    sbClient.auth.getSession().then(({ data: { session } }) => {
+        if (!session) {
+            window.location.href = "login.html";
+        }
+    });
 
     // Fetch and display the bills
     async function loadBills() {
