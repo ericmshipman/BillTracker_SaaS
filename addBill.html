@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+        <script src="Scripts/supabase-common.js"></script>
+        <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-...your-integrity-key..."
+        crossorigin="anonymous"
+    />
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        defer
+    ></script>
+      </head>
+      <body class="p-3">
+        <h2>Add Bill</h2>
+        <form id="billForm">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" id="billName" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Amount</label>
+            <input type="number" class="form-control" id="billAmount" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Due Date</label>
+            <input type="date" class="form-control" id="dueDate" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Occurs Every</label>
+            <input type="number" class="form-control" id="billOccursEvery" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Occurs Type</label>
+            <select class="form-select" id="billOccursType" required>
+              <option value="Day">Day(s)</option>
+              <option value="Week">Week(s)</option>
+              <option value="Month">Month(s)</option>
+              <option value="Year">Year(s)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-sm btn-outline-primary">Submit</button>
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="cancelAddBill()">Cancel</button>
+        </form>
+      
+        <script type="module">
+          async function loadBill(id){
+            const bill = await getBillById(id);
+            if(!bill){
+                alert("Bill not found");
+                return;
+            }
+
+            document.getElementById("billName").value = bill.name;
+            document.getElementById("billAmount").value = bill.amount;
+            document.getElementById("dueDate").value = bill.due_date;
+            document.getElementById("billOccursEvery").value = bill.occurs_every;
+            document.getElementById("billOccursType").value = bill.occurs_every_unit;
+
+          }
+
+          const urlParams = new URLSearchParams(window.location.search);
+            const billId = urlParams.get("id");
+            if (billId) loadBill(billId);
+
+          document.getElementById("billForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+      
+            const bill = {
+              name: document.getElementById("billName").value.trim(),
+              amount: parseFloat(document.getElementById("billAmount").value),
+              due_date: document.getElementById("dueDate").value,
+              occurs_every: parseInt(document.getElementById("billOccursEvery").value),
+              occurs_every_unit: document.getElementById("billOccursType").value
+            };
+
+            if (!billId){
+                await addBill(bill);
+            }else{
+                await updateBill(billId, bill);
+            }
+            
+            window.location.href = "bills.html";
+          });
+
+        </script>
+        <script>
+            async function cancelAddBill(){
+            window.location.href = "bills.html";
+          }
+        </script>
+      </body>
+</html>
