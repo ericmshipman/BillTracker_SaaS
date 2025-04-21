@@ -21,7 +21,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-          <a class="navbar-brand" href="payments.html">Bill Track</a>
+          <a class="navbar-brand" href="payments.html">Payments</a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
           </button>
@@ -36,12 +36,11 @@
         </div>
       </nav>
     <div class="container my-4">
-        <h4 class="mb-3">Payments</h4>
         <div class="mb-3">
-            <select id="plannedDateSelect" class="form-select" multiple size="2" onchange="onPlannedDateChange()">
+            <select id="plannedDateSelect" class="form-select" multiple size="3" onchange="onPlannedDateChange()">
               <option selected disabled>Loading dates...</option>
             </select>
-          </div>
+        </div>
         <ul class="list-group shadow-sm" id="itemlist"></ul>
         <button class="btn btn-primary w-100 my-4" onclick="startAddItem()">+ Add Bill</button>
         <style>
@@ -61,7 +60,8 @@
         async function getPmts(){
             const pmts = await getPayments();
             allPayments = pmts;
-            renderItems(allPayments);
+            selectClosestPlannedDate();
+            //renderItems(allPayments);
         }
 
         async function renderItems(payments) {
@@ -124,13 +124,18 @@
             window.location.href = "payment.html";
         }
       
-        function PlanOrPaid(paid_date,planned_date){
-            if(paid_date){
-                return "<string>Paid:</strong> " + formatDate(paid_date);
-            }else{
-                 return "<strong>Planned:</strong> " + formatDate(planned_date);
-            }
-        }
+        function PlanOrPaid(paid, planned) {
+            const dateStr = paid || planned;
+            if (!dateStr) return "";
+
+            const dateLbl = paid ? "Paid: " : "Planned: ";
+            // Extract YYYY-MM-DD and reconstruct with local Date constructor
+            const [year, month, day] = dateStr.split("T")[0].split("-");
+            const localDate = new Date(year, month - 1, day); // JS months are 0-based
+
+            const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
+            return dateLbl + localDate.toLocaleDateString(undefined, options); // e.g., Apr 15, 2025
+}
 
         async function loadPlannedDates() {
           const payments = await getPlannedDateList();
@@ -143,7 +148,7 @@
         
           for (const dateStr of uniqueDates) {
             const date = new Date(dateStr);
-            const label = date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+            const label = date.toLocaleDateString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric' });
         
             const option = document.createElement('option');
             option.value = dateStr;
@@ -153,13 +158,46 @@
           }
         }
 
+        function getDefaultPlannedDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth();
+
+            let targetDate;
+
+            if (today.getDate() > 15) {
+                // Select the 15th of this month
+                targetDate = new Date(year, month, 15);
+            } else {
+                // Select the last day of previous month
+                targetDate = new Date(year, month, 0); // Day 0 gives last day of previous month
+            }
+
+            // Return in YYYY-MM-DD format
+            return targetDate.toISOString().split('T')[0];
+        }
+        function selectClosestPlannedDate() {
+            const plannedDateKey = getDefaultPlannedDate();
+            const select = document.getElementById('plannedDateSelect');
+            
+            if (!select) return;
+
+            // Try to find a matching option
+            const options = Array.from(select.options);
+            const match = options.find(opt => opt.value === plannedDateKey);
+
+            if (match) {
+                select.value = plannedDateKey;
+                select.dispatchEvent(new Event('change')); // optional: trigger filter logic
+            }
+            }
         function onPlannedDateChange() {
             const select = document.getElementById('plannedDateSelect');
             const selectedDates = Array.from(select.selectedOptions).map(opt => opt.value);
             console.log('Selected planned date:', selectedDates);
 
             if(selectedDates.lenght === 0){
-                renderItems();
+                renderItems(allPayments);
             }else{
                 const filterPmts = allPayments.filter(p => selectedDates.includes(p.planned_date.split('T')[0]));
                 renderItems(filterPmts);

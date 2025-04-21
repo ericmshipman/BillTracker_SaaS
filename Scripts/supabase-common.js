@@ -52,7 +52,7 @@ async function getPayments(start_date, end_date, status = "both") {
     qy = qy.gte('planned_date',end_date);
   }
 
-  const { data, error } = await qy;
+  const { data, error } = await qy.order("planned_date", {ascending: false});
 
   if (error) 
     console.error("Fetch payments error:", error);
