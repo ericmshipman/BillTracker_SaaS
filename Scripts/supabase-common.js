@@ -35,25 +35,56 @@ async function deleteBill(id) {
 }
 
 // === CRUD: Payments ===
-async function getPayments() {
-  const { data, error } = await supa.from("Payments").select("*").order("date_due");
-  if (error) console.error("Fetch payments error:", error);
+async function getPayments(start_date, end_date, status = "both") {
+  let qy = supa.from('payments').select('*');
+
+  if(status == "planned"){
+    qy = qy.is('paid_date',null);
+  }else if(status == "paid"){
+    qy = qy.not('paid_date', 'is', null);
+  }
+
+  if(start_date){
+    qy = qy.gte('planned_date',start_date);
+  }
+
+  if(end_date){
+    qy = qy.gte('planned_date',end_date);
+  }
+
+  const { data, error } = await qy;
+
+  if (error) 
+    console.error("Fetch payments error:", error);
+  
   return data || [];
 }
 
+async function getPlannedDateList(){
+    const { data, error } = await supa.from("payments").select("planned_date").order("planned_date", {ascending: false});
+    if (error) console.error("Fetch payments error:", error);
+    return data || [];
+}
+
+async function getPaymentById(id) {
+    const {data, error} = await supa.from("payments").select("*").eq("id", id).maybeSingle()
+    if(error) console.error("Get payment by id error:", error);
+    return data;
+}
+
 async function addPayment(payment) {
-  const { data, error } = await supa.from("Payments").insert([payment]);
+  const { data, error } = await supa.from("payments").insert([payment]);
   if (error) console.error("Add payment error:", error);
   return data;
 }
 
 async function updatePayment(id, updates) {
-  const { data, error } = await supa.from("Payments").update(updates).eq("id", id);
+  const { data, error } = await supa.from("payments").update(updates).eq("id", id);
   if (error) console.error("Update payment error:", error);
   return data;
 }
 
 async function deletePayment(id) {
-  const { error } = await supa.from("Payments").delete().eq("id", id);
+  const { error } = await supa.from("payments").delete().eq("id", id);
   if (error) console.error("Delete payment error:", error);
 }
