@@ -61,7 +61,11 @@
 
     loginBtn.addEventListener('click', async () => {
       const { error } = await supabaseClient.auth.signInWithOtp({
-        email: emailInput.value
+        email: emailInput.value,
+        options: {
+            shouldCreateUser:false,
+            redirectTo: window.location.origin + "/login.html"
+        }
       });
 
       if (error) {
