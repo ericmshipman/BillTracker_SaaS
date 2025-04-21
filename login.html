@@ -55,6 +55,23 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5eHN4bnhzenBvY3N6bG1ycGRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxMDQ1NzYsImV4cCI6MjA2MDY4MDU3Nn0.ANiq24mu1Pu2oA7Y2z-EzmCJUT1MZt4kyV7Hm8edm6s';
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+    async function handleMagicLink() {
+        const hash = window.location.hash;
+
+        if (hash.includes("access_token")) {
+            const { data, error } = await supabaseClient.auth.exchangeCodeForSession();
+
+            if (error) {
+            alert("Login error: " + error.message);
+            } else {
+            // Login complete! Redirect to app
+            window.location.href = "payments.html";
+            }
+        }
+    }
+
+    handleMagicLink();
+    
     const emailInput = document.getElementById('email');
     const loginBtn = document.getElementById('login-button');
     const messageDiv = document.getElementById('message');
@@ -64,7 +81,7 @@
         email: emailInput.value,
         options: {
             shouldCreateUser:false,
-            redirectTo: window.location.origin + "/login.html"
+            redirectTo: window.location.origin + '/BillTracker_SaaS/login.html'
         }
       });
 
