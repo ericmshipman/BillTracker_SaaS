@@ -15,6 +15,7 @@
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         defer
     ></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
       </head>
       <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -34,6 +35,9 @@
           </div>
         </nav>
         <form id="billForm" class="p-3">
+          <div class="mb-3">
+            
+          </div>
           <div class="mb-3">
             <label class="form-label">Name</label>
             <input type="text" class="form-control" id="billName" required>
@@ -59,6 +63,11 @@
               <option value="Year">Year(s)</option>
             </select>
           </div>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="billArchived"></input>
+            <label for="billArchived" class="form-check-lable">Archived</label>
+          </div>
+
           <button type="submit" class="btn btn-sm btn-outline-primary">Submit</button>
           <button type="button" class="btn btn-sm btn-outline-danger" onclick="cancelAddBill()">Cancel</button>
         </form>
@@ -71,12 +80,17 @@
                 return;
             }
 
+            document.getElementById("billArchived").checked = bill.archived;
             document.getElementById("billName").value = bill.name;
             document.getElementById("billAmount").value = bill.amount;
             document.getElementById("dueDate").value = bill.due_date;
             document.getElementById("billOccursEvery").value = bill.occurs_every;
             document.getElementById("billOccursType").value = bill.occurs_every_unit;
 
+            //Disable Controls
+            if (bill.archived){
+              enabledDisable(bill.archived);
+            }
           }
 
           const urlParams = new URLSearchParams(window.location.search);
@@ -91,7 +105,8 @@
               amount: parseFloat(document.getElementById("billAmount").value),
               due_date: document.getElementById("dueDate").value,
               occurs_every: parseInt(document.getElementById("billOccursEvery").value),
-              occurs_every_unit: document.getElementById("billOccursType").value
+              occurs_every_unit: document.getElementById("billOccursType").value,
+              archived: document.getElementById("billArchived").checked ? true : false
             };
 
             if (!billId){
@@ -103,6 +118,13 @@
             window.location.href = "bills.html";
           });
 
+          function enabledDisable(enabled){
+            document.getElementById("billName").disabled = enabled;
+            document.getElementById("billAmount").disabled = enabled;
+            document.getElementById("dueDate").disabled = enabled;
+            document.getElementById("billOccursEvery").disabled = enabled;
+            document.getElementById("billOccursType").disabled = enabled;
+          }
         </script>
         <script>
             async function cancelAddBill(){

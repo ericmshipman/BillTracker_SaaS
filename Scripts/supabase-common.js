@@ -5,8 +5,13 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // === CRUD: Bills ===
-async function getBills() {
-  const { data, error } = await supa.from("bills").select("*").order("name");
+async function getBills(archived) {
+  let qy = supa.from('bills').select('*');
+
+  if(archived){
+    qy.eq("archived", false);
+  }
+  const { data, error } = await qy.order("name");
   if (error) console.error("Fetch bills error:", error);
   return data || [];
 }
