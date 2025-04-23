@@ -6,7 +6,7 @@ const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // === CRUD: Bills ===
 async function getBills(archived) {
-  let qy = supa.from('bills').select('*');
+  let qy = supa.from('bills').select('*').order("pay_period","name");
 
   if(archived){
     qy.eq("archived", false);
@@ -41,7 +41,13 @@ async function deleteBill(id) {
 
 // === CRUD: Payments ===
 async function getPayments(start_date, end_date, status = "both") {
-  let qy = supa.from('payments').select('*');
+  let qy = supa.from('payments')
+  .select(`
+    *,
+    bills (
+      url 
+      )
+    `);
 
   if(status == "planned"){
     qy = qy.is('paid_date',null);
@@ -57,7 +63,7 @@ async function getPayments(start_date, end_date, status = "both") {
     qy = qy.gte('planned_date',end_date);
   }
 
-  const { data, error } = await qy.order("planned_date", {ascending: false});
+  const { data, error } = await qy.order("planned_date", {ascending: false}).order("name");
 
   if (error) 
     console.error("Fetch payments error:", error);

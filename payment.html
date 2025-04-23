@@ -50,7 +50,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Amount</label>
-            <input type="number" class="form-control" id="paymentAmount" required>
+            <input type="number" step=".01" class="form-control" id="paymentAmount" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Due Date</label>
@@ -65,8 +65,8 @@
             <input type="date" class="form-control" id="paymentPaidDate">
           </div>
 
-          <button type="submit" class="btn btn-sm btn-outline-primary">Submit</button>
-          <button type="button" class="btn btn-sm btn-outline-danger" onclick="cancelAddPayment()">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary">Submit</button>
+          <button type="button" class="btn btn-sm btn-danger" onclick="cancelAddPayment()">Cancel</button>
         </form>
       
         <script type="module">

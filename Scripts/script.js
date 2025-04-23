@@ -5,13 +5,11 @@ function formatDate(dateString) {
 }
 
 function formatLocalDate(dateInput) {
-    const date = new Date(dateInput);
-    if (isNaN(date)) {
-      console.error("Invalid date passed to formatLocalDate:", dateInput);
-      return "";
-    }
-    const tzOffset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - tzOffset).toISOString().split("T")[0];
+    const dateStr = dateInput;
+    const [year, month, day] = dateStr.split("T")[0].split("-");
+    const localDate = new Date(year, month - 1, day); // JS months are 0-based
+    const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
+    return localDate.toLocaleDateString(undefined, options);
   }
 
 function getAmountText(paid_date){
