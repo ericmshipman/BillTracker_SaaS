@@ -17,6 +17,7 @@
         defer
     ></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="Scripts/script.js"></script>
       </head>
       <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -43,6 +44,9 @@
           <div class="mb-3">
             <label class="form-label">URL</label>
             <input type="text" class="form-control" id="billURL">
+            <div class="invalid-feedback">
+              Update the URL
+            </div>
           </div>
           <div class="mb-3">
             <label class="form-label">Amount</label>
@@ -89,6 +93,10 @@
             document.getElementById("billArchived").checked = bill.archived;
             document.getElementById("billName").value = bill.name;
             document.getElementById("billURL").value = bill.url;
+            if(showNeedUrl){
+              document.getElementById("billURL").className = "form-control is-invalid"
+            }
+
             document.getElementById("billAmount").value = bill.amount;
             document.getElementById("payPeriod").value = bill.pay_period;
             document.getElementById("dueDate").value = bill.due_date;
@@ -102,8 +110,11 @@
           }
 
           const urlParams = new URLSearchParams(window.location.search);
-            const billId = urlParams.get("id");
-            if (billId) loadBill(billId);
+          const billId = urlParams.get("id");
+          const needURL = urlParams.get("NeedUrl");
+          const showNeedUrl = needURL == 1 ? true : false;
+
+          if (billId) loadBill(billId);
 
           document.getElementById("billForm").addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -125,7 +136,13 @@
                 await updateBill(billId, bill);
             }
             
-            window.location.href = "bills.html";
+            if(needURL){
+              goURL(bill.url);
+              window.location.href = "payments.html";
+            }else{
+              window.location.href = "bills.html";
+            }
+            
           });
 
           function enabledDisable(enabled){

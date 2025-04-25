@@ -19,3 +19,15 @@ function getAmountText(paid_date){
         return "text-danger fw-bold fs-3";
     }
 }
+
+function goURL(url){
+    if (url && typeof url === "string" && url.trim().toLowerCase() !== "null") {
+        // Add protocol if missing
+        if (!/^https?:\/\//i.test(url)) {
+        url = "https://" + url;
+        }
+        window.open(url, "_blank");
+    } else {
+        console.warn("Invalid or missing URL:", url);
+    }
+}

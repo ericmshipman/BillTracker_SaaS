@@ -1,0 +1,7 @@
+.card_late_payment {
+    background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 70%,   /* Start fully transparent at 0%, stay transparent until 70% */
+    rgba(255, 0, 0, .1) 100% /* Fade into red from 70% to 100% */
+    );
+}
