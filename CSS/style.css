@@ -25,3 +25,21 @@
     background-color:rgba(34, 193, 34, 0.1);
     border-color : #22c122 !important;
 }
+
+.collapse-custom{
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.4s ease;
+    opacity: 0;
+
+}
+
+.collapse-custom.show {
+    max-height: 500px; /* adjust this if needed */
+    opacity: 1;
+  }
+
+.rotate-180 {
+    transform: rotate(90deg); 
+    transition: transform 0.3s ease;
+}

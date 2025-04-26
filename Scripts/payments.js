@@ -70,7 +70,8 @@ async function renderItems(payments) {
         <div class="card-header p-2 " onclick="editItem('${payment.id}')">
         <div class="d-flex justify-content-between align-items-start">
             <div>
-                <h6 class="mb-1 align-text-center">${payment.name}</i></h6>
+                <h6 class="mb-1 align-text-center">${payment.name}</i> 
+</h6>
             </div>
             <div class="text-muted small text-end">
                 <div>${PlanOrPaid(payment.paid_date,payment.planned_date)}</div>
@@ -94,7 +95,7 @@ async function renderItems(payments) {
                 <span class="px-2 rounded hover-bg-light" role="button" onclick="visitURL('${payment.bills?.url}',${payment.bill_id})">
                     <i class="bi-globe text-primary fs-4"></i>
                 </span>
-                <span class="px-2 rounded hover-bg-light" role="button" onclick="openReceiptModal('${payment.id}','${payment.receipt_url??""} ')">
+                <span class="px-2 rounded hover-bg-light" role="button" onclick="openReceiptModal('${payment.id}','${payment.receipt_url??""}')">
                     <i class="${!payment.receipt_url ? "bi-link-45deg" : "bi-receipt"} text-primary fs-2"></i>
                 </span>
             </div>
@@ -263,6 +264,17 @@ function openReceiptModal(paymentId, url) {
     await updatePayment(currentPaymentId, payment);
 
     bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
+  }
+
+  //Filter Show/Hide
+  function toggleFilterCard(){
+    const card = document.getElementById('filterCard');
+    const icon = document.getElementById('toggleFilter');
+    const filterButton = document.getElementById('filterButton');
+    icon.classList.toggle('bi-funnel-fill');
+    icon.classList.toggle('bi-funnel');
+    card.classList.toggle('show');
+    filterButton.classList.toggle('rotate-180');
   }
 
 getPmts();

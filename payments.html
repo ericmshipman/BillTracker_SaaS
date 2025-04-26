@@ -40,14 +40,17 @@
       </nav>
 
     <div class="container my-2">
-        <div class="m-2">
+        <div class="my-2 d-flex justify-content-between align-items-end">
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" id="showPaid" onchange="onShowPaidChange()">
                 <label class="form-check-label" for="showPaid" id="showPaidLabel">Show Paid</label>
-              </div>
+            </div>
+            <span class="px-0 rounded hover-bg-light" role="button" id="filterButton" onclick="toggleFilterCard()">
+                <i class="bi-funnel text-primary fs-4" id="toggleFilter" ></i>
+            </span>    
         </div>
 
-        <div class="card">
+        <div class="card collapse-custom" id="filterCard">
             <div class="card-header">
                 Select a Planned Date
             </div>
