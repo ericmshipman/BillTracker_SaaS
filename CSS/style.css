@@ -1,7 +1,27 @@
-.card_late_payment {
+.card_unpaid_late{
     background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0) 70%,   /* Start fully transparent at 0%, stay transparent until 70% */
-    rgba(255, 0, 0, .1) 100% /* Fade into red from 70% to 100% */
+    rgba(255, 255, 255, .5) 70%,   /* Start fully transparent at 0%, stay transparent until 70% */
+    rgba(255, 0, 0, .05) 100% /* Fade into red from 70% to 100% */
     );
+}
+
+.card_paid_late{
+    background-color:rgba(193, 34, 34, 0.1) ;
+    border-color : #fc0000 !important;
+}
+
+.card_paid_late .card-header{
+    background-color:rgba(193, 34, 34, 0.1) ;
+    border-color : #fc0000 ;
+}
+
+.card_paid .card-header{
+    background-color:rgba(34, 193, 34, 0.1) ;
+    border-color : #22c122;
+}
+
+.card_paid{
+    background-color:rgba(34, 193, 34, 0.1);
+    border-color : #22c122 !important;
 }

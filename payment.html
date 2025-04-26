@@ -64,7 +64,10 @@
             <label class="form-label">Paid Date</label>
             <input type="date" class="form-control" id="paymentPaidDate">
           </div>
-
+          <div class="mb-3">
+            <label class="form-label">Receipt URL</label>
+            <input type="text" class="form-control" id="paymentReceiptURL">
+          </div>
           <button type="submit" class="btn btn-sm btn-primary">Submit</button>
           <button type="button" class="btn btn-sm btn-danger" onclick="cancelAddPayment()">Cancel</button>
         </form>
@@ -83,6 +86,7 @@
             document.getElementById("paymentAmount").value = payment.amount;
             document.getElementById("paymentDueDate").value = payment.due_date;
             document.getElementById("paymentPlannedDate").value = payment.planned_date;
+            document.getElementById("paymentReceiptURL").value = payment.receipt_url;
 
             document.getElementById("paymentPaidDate").value = payment.paid_date;               
           }
@@ -100,8 +104,8 @@
               notes: document.getElementById("paymentNotes").value.trim(),
               amount: parseFloat(document.getElementById("paymentAmount").value),
               due_date: document.getElementById("paymentDueDate").value,
-              planned_date: document.getElementById("paymentPlannedDate").value//,
-              //paid_date: document.getElementById("paymentPaidDate").value
+              planned_date: document.getElementById("paymentPlannedDate").value,
+              receipt_url: document.getElementById("paymentReceiptURL").value
             };
 
             if(document.getElementById("paymentPaidDate").value){

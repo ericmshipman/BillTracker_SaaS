@@ -93,6 +93,7 @@
             document.getElementById("billArchived").checked = bill.archived;
             document.getElementById("billName").value = bill.name;
             document.getElementById("billURL").value = bill.url;
+            
             if(showNeedUrl){
               document.getElementById("billURL").className = "form-control is-invalid"
             }
@@ -111,7 +112,7 @@
 
           const urlParams = new URLSearchParams(window.location.search);
           const billId = urlParams.get("id");
-          const needURL = urlParams.get("NeedUrl");
+          const needURL = urlParams.get("NeedURL");
           const showNeedUrl = needURL == 1 ? true : false;
 
           if (billId) loadBill(billId);

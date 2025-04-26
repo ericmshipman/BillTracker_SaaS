@@ -54,7 +54,7 @@
       <script> 
         async function renderBills() {
             const Archived = document.getElementById('showArchived');
-            let showArchived = Archived ? Archived.checked : false
+            let showArchived = Archived ? Archived.checked : false;
 
             const bills = await getBills(!showArchived);
             const list = document.getElementById("billList");
