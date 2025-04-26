@@ -87,7 +87,7 @@ async function renderItems(payments) {
             <div>
                 <span class="px-2 rounded hover-bg-light" role="button" onclick="markPaid('${payment.id}', ${payment.paid_date})">
                     <i class="${payment.paid_date ? "bi-check-circle-fill text-success" : "bi-check-circle text-primary"} fs-4"></i>
-                </span>
+                </span>                
                 <span class="px-2 rounded hover-bg-light" role="button" onclick="delPayment('${payment.id}')">
                     <i class="bi-trash-fill text-primary fs-4"></i>
                 </span>
