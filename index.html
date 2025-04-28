@@ -41,7 +41,18 @@
               </div>
             </div>
           </nav>
+          
           <form class="p-3">
+            <div class="card collapse-custom" id="filterCard">
+                <div class="card-header">
+                    Select a Planned Date
+                </div>
+                <div class="mb-1 ">
+                    <select id="plannedDateSelect" class="form-select border-0" multiple size="3" onchange="onPlannedDateChange()">
+                        <option selected disabled>Loading dates...</option>
+                    </select>
+                </div>
+            </div>
             <div class="container my-2">
                 <div class="my-2 d-flex justify-content-between align-items-end">
                     <div class="form-check form-switch">
@@ -69,16 +80,7 @@
                 <input class="form-control" id="cashflowBalance" type="text" placeholder="0.00" disabled></input>
             </div>
         </form>
-        <div class="card collapse-custom" id="filterCard">
-            <div class="card-header">
-                Select a Planned Date
-            </div>
-            <div class="mb-1 ">
-                <select id="plannedDateSelect" class="form-select border-0" multiple size="3" onchange="onPlannedDateChange()">
-                    <option selected disabled>Loading dates...</option>
-                </select>
-            </div>
-        </div>
+
 
 
      
