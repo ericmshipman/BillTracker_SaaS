@@ -45,7 +45,8 @@ async function getPayments(start_date, end_date, status = "both") {
   .select(`
     *,
     bills (
-      url 
+      url,
+      autopay 
       )
     `);
 

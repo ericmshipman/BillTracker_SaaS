@@ -29,6 +29,7 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
               <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="bills.html">Bills</a></li>
                 <li class="nav-item"><a class="nav-link" href="payments.html">Payments</a></li>
                 <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
@@ -37,49 +38,57 @@
           </div>
         </nav>
         <form id="billForm" class="p-3">
-          <div class="mb-3">
-            <label class="form-label">Name</label>
+          <div class="form-floating mb-3">
             <input type="text" class="form-control" id="billName" required>
+            <label class="form-label" for=""billName>Name</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label">URL</label>
+          <div class="form-floating mb-3">
             <input type="text" class="form-control" id="billURL">
+            <label for="billURL" class="form-label">URL</label>
             <div class="invalid-feedback">
               Update the URL
             </div>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Amount</label>
+          <div class="form-floating mb-3">
             <input type="number" step=".01" class="form-control" id="billAmount" required>
+            <label for="billAmount" class="form-label">Amount</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Due Date</label>
+          <div class="form-floating mb-3">
             <input type="date" class="form-control" id="dueDate" required>
+            <label for="dueDate" class="form-label">Due Date</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label"></label>Pay Period</label>
+          <div class="form-floating mb-3">
             <input type="number" step="1" class="form-control" id="payPeriod" value="1">
+            <label for="payPeriod" class="form-label">Pay Period</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Occurs Every</label>
+          <div class="form-floating mb-3">
             <input type="number" class="form-control" id="billOccursEvery" required>
+            <label for="billOccursEvery" class="form-label">Occurs Every</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Occurs Type</label>
+          <div class="form-floating mb-3">
             <select class="form-select" id="billOccursType" required>
               <option value="Day">Day(s)</option>
               <option value="Week">Week(s)</option>
               <option value="Month">Month(s)</option>
               <option value="Year">Year(s)</option>
             </select>
+            <label for="billOccursType" class="form-label">Occurs Type</label>
           </div>
-          <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" id="billArchived"></input>
-            <label for="billArchived" class="form-check-lable">Archived</label>
+          <div class="d-flex justify-content-between">
+            <div class="form-check form-switch">
+              <input type="checkbox" class="form-check-input" role="switch" id="billAutopay"></input>
+              <label for="billAutopay" class="form-check-label">Autopay</label>
+            </div>
+            <div class="form-check form-switch">
+              <input type="checkbox" class="form-check-input" role="switch" id="billArchived" onclick="archivedOnChange()"></input>
+              <label for="billArchived" class="form-check-label">Archived</label>
+            </div>
+          </div> 
+          <div class="my-3">
+            <button type="submit" class="btn btn-sm btn-primary">Submit</button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="cancelAddBill()">Cancel</button>
           </div>
-
-          <button type="submit" class="btn btn-sm btn-primary">Submit</button>
-          <button type="button" class="btn btn-sm btn-danger" onclick="cancelAddBill()">Cancel</button>
+         
         </form>
       
         <script type="module">
@@ -91,6 +100,7 @@
             }
 
             document.getElementById("billArchived").checked = bill.archived;
+            document.getElementById("billAutopay").checked = bill.autopay;
             document.getElementById("billName").value = bill.name;
             document.getElementById("billURL").value = bill.url;
             
@@ -128,7 +138,8 @@
               occurs_every: parseInt(document.getElementById("billOccursEvery").value),
               pay_period: parseInt(document.getElementById("payPeriod").value),
               occurs_every_unit: document.getElementById("billOccursType").value,
-              archived: document.getElementById("billArchived").checked ? true : false
+              archived: document.getElementById("billArchived").checked ? true : false,
+              autopay: document.getElementById("billAutopay").checked ? true : false
             };
 
             if (!billId){
@@ -146,18 +157,30 @@
             
           });
 
+
+
+        </script>
+        <script>
+            async function cancelAddBill(){
+            window.location.href = "bills.html";
+          }
+
+          function archivedOnChange(){
+            const archived = document.getElementById("billArchived").checked ? true : false
+            enabledDisable(archived);
+          }
+
           function enabledDisable(enabled){
             document.getElementById("billName").disabled = enabled;
             document.getElementById("billAmount").disabled = enabled;
             document.getElementById("dueDate").disabled = enabled;
             document.getElementById("billOccursEvery").disabled = enabled;
             document.getElementById("billOccursType").disabled = enabled;
+            document.getElementById("payPeriod").disabled = enabled;
+            document.getElementById("billURL").disabled = enabled;
+            document.getElementById("billAutopay").disabled = enabled;
           }
-        </script>
-        <script>
-            async function cancelAddBill(){
-            window.location.href = "bills.html";
-          }
+
         </script>
       </body>
 </html>

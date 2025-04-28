@@ -1,6 +1,101 @@
 let allPayments = [];
 let currentPaymentId = null;
 
+// UI state
+let selectedDates = [];
+let selectedPayments = [];
+let showPaid = false;
+let renderType = "card";
+
+async function initPaymentsPage() {
+    allPayments = await getPayments();
+    await loadPlannedDates(); // load select options
+    selectClosestPlannedDate();
+}
+
+async function initHomePage() {
+    renderType = "list";
+    allPayments = await getPayments();
+    await loadPlannedDates(); // load select options
+    selectClosestPlannedDate();
+}
+
+async function loadPlannedDates() {
+    const payments = await getPlannedDateList();
+  
+    // Get unique dates (removing time portion)
+    const uniqueDates = [...new Set(payments.map(p => p.planned_date.split('T')[0]))];
+  
+    const select = document.getElementById('plannedDateSelect');
+     select.innerHTML = '';
+  
+     uniqueDates.forEach(dateStr => {
+        const option = document.createElement('option');
+        option.value = dateStr;
+        option.textContent = formatLocalDate(dateStr);
+        select.appendChild(option);
+    });
+}
+
+function selectClosestPlannedDate() {
+    const plannedDateKey = getDefaultPlannedDate();
+    const select = document.getElementById('plannedDateSelect');
+    
+    if (!select) return;
+
+    // Try to find a matching option
+    const options = Array.from(select.options);
+    const match = options.find(opt => opt.value === plannedDateKey);
+
+    if (match) {
+        select.value = plannedDateKey;
+    }
+    updateFilterState();
+}
+
+function updateFilterState() {
+    const select = document.getElementById('plannedDateSelect');
+    selectedDates = Array.from(select.selectedOptions).map(opt => opt.value);
+
+    const showPaidCheckbox = document.getElementById('showPaid');
+    showPaid = showPaidCheckbox ? showPaidCheckbox.checked : false;
+
+    filterAndRenderPayments();
+}
+
+function filterAndRenderPayments() {
+    let filtered = [...allPayments];
+    let filteredDate = [...allPayments];
+
+    // Filter by planned date(s)
+    if (selectedDates.length > 0) {
+        filtered = filtered.filter(p => selectedDates.includes(p.planned_date.split('T')[0]));
+        filteredDate = filtered;
+    }
+
+    // Filter by paid status
+    if (!showPaid) {
+        filtered = filtered.filter(p => !p.paid_date);
+    }
+
+    renderItems(filtered, filteredDate);
+
+    updateSelectedTotal();
+}
+
+function onPlannedDateChange() {
+    updateFilterState();
+}
+
+function onShowPaidChange() {
+    const label = document.getElementById('showPaidLabel');
+    const showPaidCheckbox = document.getElementById('showPaid');
+
+    label.innerText = showPaidCheckbox.checked ? "Hide Paid" : "Show Paid";
+
+    updateFilterState();
+}
+
 function PaidCheckMessage(){
     const ShowPaid = document.getElementById('showPaid');
     return ShowPaid.checked ? "Hide Paid" : "Show Paid";
@@ -43,11 +138,11 @@ async function refreshPmts(){
     select.dispatchEvent(new Event('change'));
 }
 
-async function renderItems(payments) {
+async function renderItems(payments, paymentsDate) {
     //payments = payments || allPayments;
     const list = document.getElementById("itemlist");
-    const totalPaid = payments.filter(p=> p.paid_date).reduce((sum,p) => sum + (p.amount || 0),0);
-    const totalUnpaid = payments.filter(p => !p.paid_date).reduce((sum, p) => sum + (p.amount || 0),0);
+    const totalPaid = paymentsDate.filter(p=> p.paid_date).reduce((sum,p) => sum + (p.amount || 0),0);
+    const totalUnpaid = paymentsDate.filter(p => !p.paid_date).reduce((sum, p) => sum + (p.amount || 0),0);
 
     document.getElementById("totalPaid").innerText = `Paid: $${totalPaid.toFixed(2)}`;
     document.getElementById("totalPlanned").innerText =`Planned: $${totalUnpaid.toFixed(2)}`;
@@ -61,53 +156,158 @@ async function renderItems(payments) {
 
     list.innerHTML = "";
 
-    payments.forEach(payment => {
-    const card = document.createElement("div");
-    let format = isLate(payment.due_date,payment.paid_date);
-    card.className = "card my-1 " + format;
-    
-    card.innerHTML = `
-        <div class="card-header p-2 " onclick="editItem('${payment.id}')">
-        <div class="d-flex justify-content-between align-items-start">
-            <div>
-                <h6 class="mb-1 align-text-center">${payment.name}</i> 
-</h6>
-            </div>
-            <div class="text-muted small text-end">
-                <div>${PlanOrPaid(payment.paid_date,payment.planned_date)}</div>
-            </div>
-            </div>
-        </div>
-        <div class="card-body p-1" >
-            <div class="d-flex justify-content-between align-text-bottom" onclick="editItem('${payment.id}')">
-                <p class="text-muted small">${payment.notes || "<em>Enter Notes...</em>"}</p>
-                <div class="${getAmountText(payment.paid_date)}">$${Number(payment.amount).toFixed(2)}</div>
-            </div>
-
-        <div class="d-flex justify-content-between align-items-end" >
-            <div>
-                <span class="px-2 rounded hover-bg-light" role="button" onclick="markPaid('${payment.id}', ${payment.paid_date})">
-                    <i class="${payment.paid_date ? "bi-check-circle-fill text-success" : "bi-check-circle text-primary"} fs-4"></i>
-                </span>                
-                <span class="px-2 rounded hover-bg-light" role="button" onclick="delPayment('${payment.id}')">
-                    <i class="bi-trash-fill text-primary fs-4"></i>
-                </span>
-                <span class="px-2 rounded hover-bg-light" role="button" onclick="visitURL('${payment.bills?.url}',${payment.bill_id})">
-                    <i class="bi-globe text-primary fs-4"></i>
-                </span>
-                <span class="px-2 rounded hover-bg-light" role="button" onclick="openReceiptModal('${payment.id}','${payment.receipt_url??""}')">
-                    <i class="${!payment.receipt_url ? "bi-link-45deg" : "bi-receipt"} text-primary fs-2"></i>
-                </span>
-            </div>
-            <div class="text-muted small">
-                 <div><strong>Due:</strong> ${formatLocalDate(payment.due_date)}</div>
-            </div>
-        </div>  
+    if(renderType==="card"){
+        payments.forEach(payment => {
+            const card = document.createElement("div");
+            let format = isLate(payment.due_date,payment.paid_date);
+            card.className = "card my-1 " + format;
+            
+            card.innerHTML = `
+                <div class="card-header p-2 " onclick="editItem('${payment.id}')">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1 align-text-center">${payment.bills?.autopay ? " <i class=\"bi-arrow-repeat text-muted\" style=\"font-size: 1.3rem;\" title=\"Auto Pay\"></i>" : ""} ${payment.name}
+                        </h6>
+                    </div>
+                    <div class="text-muted small text-end">
+                        <div>${PlanOrPaid(payment.paid_date,payment.planned_date)}</div>
+                    </div>
+                    </div>
+                </div>
+                <div class="card-body p-1" >
+                    <div class="d-flex justify-content-between align-text-bottom" onclick="editItem('${payment.id}')">
+                        <p class="text-muted small">${payment.notes || "<em>Enter Notes...</em>"}</p>
+                        <div class="${getAmountText(payment.paid_date)}">$${Number(payment.amount).toFixed(2)}</div>
+                    </div>
         
-    `;
+                <div class="d-flex justify-content-between align-items-end" >
+                    <div>
+                        <span class="px-2 rounded hover-bg-light" role="button" onclick="markPaid('${payment.id}', ${payment.paid_date}, '${payment.bills?.autopay}', '${payment.due_date}')">
+                            <i class="${payment.paid_date ? "bi-check-circle-fill text-success" : "bi-check-circle text-primary"} fs-4"></i>
+                        </span>                
+                        <span class="px-2 rounded hover-bg-light" role="button" onclick="delPayment('${payment.id}')">
+                            <i class="bi-trash-fill text-primary fs-4"></i>
+                        </span>
+                        <span class="px-2 rounded hover-bg-light" role="button" onclick="visitURL('${payment.bills?.url}',${payment.bill_id})">
+                            <i class="bi-globe text-primary fs-4"></i>
+                        </span>
+                        <span class="px-2 rounded hover-bg-light" role="button" onclick="openReceiptModal('${payment.id}','${payment.receipt_url??""}')">
+                            <i class="${!payment.receipt_url ? "bi-link-45deg" : "bi-receipt"} text-primary fs-2"></i>
+                        </span>
+                    </div>
+                    <div class="text-muted small">
+                         <div><strong>Due:</strong> ${formatLocalDate(payment.due_date)}</div>
+                    </div>
+                </div>  
+                
+            `;
+        
+            document.getElementById("itemlist").appendChild(card);
+        });
+    }
+    else if(renderType=="list"){
+        payments.forEach(payment => {
+            const card = document.createElement("div");
+            //let format = isLate(payment.due_date,payment.paid_date);
+            card.className = "card my-1 selectable-card";
+            card.setAttribute('data-id', payment.id);
+            card.setAttribute('data-amount', payment.amount);
+            
+            card.innerHTML = `
+                    <div class="card-header p-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="">
+                                <label class="form-check-label">${payment.name}</label> 
+                            </div>
+                            <div class="${getAmountText(payment.paid_date)}">$${Number(payment.amount).toFixed(2)}</div>
+                        </div>
+                    </div>
+                   
+                    <div class="card-body collapse">
+                        <div class="">
+                            <div class="text-muted small">
+                                <strong>Planned:</strong> ${formatLocalDate(payment.planned_date)}
+                            </div>
+                            <div class="text-muted small">
+                                <strong>Due:</strong> ${formatLocalDate(payment.due_date)}
+                            </div>
+                            <div class="text-muted small">
+                                <strong>Paid:</strong> ${payment.paid_date ? formatLocalDate(payment.paid_date) : "           "}
+                            </div>
+                        </div>
+                    </div>`;
+                
+            card.addEventListener('click', () => toggleCardSelection(payment.id, payment.amount, card));
+        
+            document.getElementById("itemlist").appendChild(card);
+        });
+        //Select all cards by default.
+        selectAllCards();
+    }
+}
 
-    document.getElementById("itemlist").appendChild(card);
+function selectAllCards(){
+    const cards = document.querySelectorAll('.selectable-card');
+
+    selectedPayments = [];
+
+    cards.forEach(card=> {
+        const paymentId = parseInt(card.getAttribute('data-id'));
+        const amount = parseFloat(card.getAttribute('data-amount')) || 0;
+
+        if(!card.classList.contains('selected')){
+            card.classList.add('selected');
+        }
+
+        selectedPayments.push({id: paymentId, amount});
     });
+
+    updateSelectedTotal();
+}
+
+function toggleCardSelection(paymentId, amount, cardElement){
+
+    const index = selectedPayments.findIndex(p=>p.id===paymentId);
+    if(index===-1)
+    {
+        selectedPayments.push({id: paymentId, amount})
+        cardElement.classList.add("selected");
+    }else{
+        selectedPayments.splice(index,1);
+        cardElement.classList.remove("selected");
+    }
+
+    updateSelectedTotal();
+}
+
+function updateSelectedTotal(){
+    const total = selectedPayments.reduce((sum, p) => sum + p.amount, 0);
+
+    const totalDisplay = document.getElementById('selectedTotal');
+    if (totalDisplay) {
+        totalDisplay.value = `${total.toFixed(2)}`;
+    }
+    
+    updateCashFlow();
+}
+
+function updateCashFlow()
+{
+    const inputAmt = document.getElementById('inputAmount');
+    let input = 0;
+    if(inputAmt){
+        input = parseFloat(inputAmt.value) || 0 ;
+    }
+    
+   
+    const selectedTotal = selectedPayments.reduce((sum, p) => sum + p.amount, 0);  
+   
+    
+    const cashFlowAmt = input - selectedTotal;
+    const cashFlow = document.getElementById('cashflowBalance');
+    if(cashFlow){
+        cashFlow.value = `${cashFlowAmt.toFixed(2)}`;
+    }
 }
 
 function visitURL(url, billId){
@@ -130,9 +330,11 @@ async function editItem(id){
     window.location.href = "payment.html?id=" + id
 }
 
-async function markPaid(id, paid_date){
-    const payment = await getPaymentById(id);
-    payment.paid_date = paid_date ? null : new Date();
+async function markPaid(id, paid_date, autopay, due_date){
+    const payment = {
+        paid_date: paid_date ? null : autopay ? due_date : new Date()
+    };
+    //payment.paid_date = 
     await updatePayment(id, payment);
     refreshPmts();
 }
@@ -154,27 +356,6 @@ function PlanOrPaid(paid, planned) {
     return dateLbl + localDate.toLocaleDateString(undefined, options); // e.g., Apr 15, 2025
 }
 
-async function loadPlannedDates() {
-  const payments = await getPlannedDateList();
-
-  // Get unique dates (removing time portion)
-  const uniqueDates = [...new Set(payments.map(p => p.planned_date.split('T')[0]))];
-
-  const select = document.getElementById('plannedDateSelect');
-   select.innerHTML = '';
-
-  for (const dateStr of uniqueDates) {
-    const date = new Date(dateStr);
-    const label = formatLocalDate(dateStr);
-
-    const option = document.createElement('option');
-    option.value = dateStr;
-    option.textContent = label;
-
-    select.appendChild(option);
-  }
-}
-
 function getDefaultPlannedDate() {
     const today = new Date();
     const year = today.getFullYear();
@@ -194,52 +375,6 @@ function getDefaultPlannedDate() {
     return targetDate.toISOString().split('T')[0];
 }
 
-function selectClosestPlannedDate() {
-    const plannedDateKey = getDefaultPlannedDate();
-    const select = document.getElementById('plannedDateSelect');
-    
-    if (!select) return;
-
-    // Try to find a matching option
-    const options = Array.from(select.options);
-    const match = options.find(opt => opt.value === plannedDateKey);
-
-    if (match) {
-        select.value = plannedDateKey;
-        select.dispatchEvent(new Event('change')); // optional: trigger filter logic
-    }
-    }
-
-function onPlannedDateChange() {
-    const select = document.getElementById('plannedDateSelect');
-    const selectedDates = Array.from(select.selectedOptions).map(opt => opt.value);
-    console.log('Selected planned date:', selectedDates);
-
-    if(selectedDates.lenght === 0){
-        renderItems(allPayments);
-    }else{
-        const filterPmts = allPayments.filter(p => selectedDates.includes(p.planned_date.split('T')[0]));
-        renderItems(filterPmts);
-    }
-
-  // You could call a filter function here:
-  // filterPaymentsByPlannedDate(selectedDate);
-}
-
-function onShowPaidChange() {
-    const ShowPaid = document.getElementById('showPaid');
-    const ShowPaidLable = document.getElementById("showPaidLabel")
-
-    let showPaid = ShowPaid ? ShowPaid.checked : false;
-
-    if(showPaid){
-        ShowPaidLable.innerHTML = "Hide Paid";
-    }else{
-        ShowPaidLable.innerHTML = "Show Paid";
-    }
-    onPlannedDateChange();            
-}
-
 function openReceiptModal(paymentId, url) {
     currentPaymentId = paymentId;
     const modal = new bootstrap.Modal(document.getElementById('receiptModal'));
@@ -254,29 +389,30 @@ function openReceiptModal(paymentId, url) {
     
   }
 
-  async function saveReceiptLink() {
-    const url = document.getElementById('receipt-url-input').value.trim();
-    
-    payment = {
-        receipt_url: url
-    };
+async function saveReceiptLink() {
+const url = document.getElementById('receipt-url-input').value.trim();
 
-    await updatePayment(currentPaymentId, payment);
+payment = {
+    receipt_url: url
+};
 
-    bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
-  }
+await updatePayment(currentPaymentId, payment);
 
-  //Filter Show/Hide
-  function toggleFilterCard(){
-    const card = document.getElementById('filterCard');
-    const icon = document.getElementById('toggleFilter');
-    const filterButton = document.getElementById('filterButton');
-    icon.classList.toggle('bi-funnel-fill');
-    icon.classList.toggle('bi-funnel');
-    card.classList.toggle('show');
-    filterButton.classList.toggle('rotate-180');
-  }
+bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
+}
 
-getPmts();
+//Filter Show/Hide
+function toggleFilterCard(){
+const card = document.getElementById('filterCard');
+const icon = document.getElementById('toggleFilter');
+icon.classList.toggle('bi-funnel-fill');
+icon.classList.toggle('bi-funnel');
+card.classList.toggle('show');
+}
 
-loadPlannedDates();
+function toggleList(){
+    const list = document.getElementById('itemlist');
+    const icon = document.getElementById('toggleSelectedList');
+    list.classList.toggle('show')
+}
+

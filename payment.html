@@ -26,6 +26,7 @@
               
               <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                  <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                   <li class="nav-item"><a class="nav-link" href="bills.html">Bills</a></li>
                   <li class="nav-item"><a class="nav-link" href="payments.html">Payments</a></li>
                   <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
@@ -131,7 +132,7 @@
 
         </script>
         <script>
-                  async function defaultFromBill(){
+            async function defaultFromBill(){
             const id = document.getElementById("paymentBill").value;
             const bill = await getBillById(id);
             if(!bill){
