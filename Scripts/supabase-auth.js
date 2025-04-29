@@ -30,7 +30,7 @@ async function signup(email, password) {
 // Forgot Password (Send Reset Email)
 async function resetPassword(email) {
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/update-password.html'
+        redirectTo: window.location.origin + '/BillTracker_SaaS/update-password.html'
     });
 
     if (error) throw error;
