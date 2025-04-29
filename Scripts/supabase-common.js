@@ -4,6 +4,32 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Initialize client (don't name it 'supabase' to avoid conflicts)
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// === Auth: Logout ===
+async function logout(){
+  const {error} = await supabaseClient.auth.signOut();
+  if(error){
+    alert('Logout Failed: ' + error.message);
+  }else{
+    window.location.href = "login.html";
+  }
+}
+
+// === Auth: Auto-Redirect if logged in ===
+async function redirectIfLoggedIn(target = "index.html") {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    window.location.href = target;
+  }
+}
+
+// === Auth: Auto-Redirect if not logged in ===
+async function redirectIfNotLoggedIn(loginPage = "login.html") {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    window.location.href = loginPage;
+  }
+}
+
 // === CRUD: Bills ===
 async function getBills(archived) {
   let qy = supa.from('bills').select('*').order("pay_period","name");
