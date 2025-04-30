@@ -38,11 +38,15 @@
         <!-- Specific JS -->
         <script src="Scripts/payments.js"></script>  
     
+        <script src="Scripts/icon.js"></script>
     </head>
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
             <div class="container-fluid">
-              <a class="navbar-brand" href="index.html"> <img src="Content/BillTrackerLogo.png" alt="Bill Tracker Logo" width="30" height="30" class="d-inline-block align-text-top"> Home</a>
+                <a class="navbar-brand d-flex align-items-center" href="index.html">
+                    <svg class="icon icon-logo" width="30" height="30" aria-hidden="true"><use href="#logo-symbol"></use></svg>  
+                    <span class="mx-2">Home</span>
+                  </a>              
               <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
               </button>
@@ -51,8 +55,8 @@
                 <ul class="navbar-nav ms-auto">
                   <li class="nav-item"><a class="nav-link" href="bills.html">Bills</a></li>
                   <li class="nav-item"><a class="nav-link" href="payments.html">Payments</a></li>
-                  <li class="nav-item"><a class="nav-link" href="logout.html">Logout</a></li>
                   <li class="nav-item"><a class="nav-link" href="settings.html">Settings</a></li>
+                  <li class="nav-item"><a class="nav-link" href="logout.html">Logout</a></li>
                 </ul>
               </div>
             </div>
@@ -79,12 +83,11 @@
                         <span class="px-0 rounded hover-bg-light" role="button" id="filterButton" onclick="toggleFilterCard()">
                             <i class="bi-funnel text-primary fs-4" id="toggleFilter" ></i>
                         </span>  
-                    </div>
-                    
+                    </div>                    
             </div>
             <div class="mb-3 input-group">
-                <i class="bi-piggy-bank text-primary fs-4 input-group-text" id="toggleSelectedList" onclick="toggleList()"></i>
-                <input class="form-control" id="inputAmount" type="number" step=".01" placeholder="0.00" onchange="updateCashFlow()""></input>
+                <i class="bi-piggy-bank text-primary fs-4 input-group-text"></i>
+                <input class="form-control" id="bankBalance" type="number" step=".01" placeholder="0.00" onchange="saveBankBal()"></input>
             </div>
             <div class="mb-3 input-group">
                 <i class="bi-card-checklist text-primary fs-4 input-group-text"></i>
@@ -95,11 +98,7 @@
                 <i class="bi-water text-primary fs-4 input-group-text"></i>
                 <input class="form-control" id="cashflowBalance" type="text" placeholder="0.00" disabled></input>
             </div>
-        </form>
-
-
-
-     
+        </form>     
         <div class="card my-2 collapse">
             <div class="m-2 align-text-top">
                 <div class="d-flex justify-content-between align-text-top ">

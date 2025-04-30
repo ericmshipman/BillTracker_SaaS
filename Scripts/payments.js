@@ -18,6 +18,8 @@ async function initHomePage() {
     allPayments = await getPayments();
     await loadPlannedDates(); // load select options
     selectClosestPlannedDate();
+    //Retreive Balance
+    retreiveBankBal();
 }
 
 async function loadPlannedDates() {
@@ -291,18 +293,43 @@ function updateSelectedTotal(){
     updateCashFlow();
 }
 
+async function saveBankBal(){
+    const bankBalance = document.getElementById("bankBalance");
+    const newBalance = parseFloat(bankBalance.value) || 0;
+    try {
+        await supabaseClient.auth.updateUser({
+          data: { bank_balance: newBalance }
+        });
+        localStorage.setItem('cb-bal', newBalance);
+      } catch (err) {
+        //Ingore
+        localStorage.setItem('cb-bal', newBalance);
+      }
+      updateCashFlow();
+}
+
+async function retreiveBankBal(){
+    let bankBalance = localStorage.getItem('cb-bal');
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    bankBalance = user?.user_metadata.bank_balance || bankBalance;
+
+    const bb = document.getElementById("bankBalance");
+    bb.value = bankBalance;
+    
+    updateCashFlow();
+}
+
 function updateCashFlow()
 {
-    const inputAmt = document.getElementById('inputAmount');
+    const inputAmt = document.getElementById('bankBalance');
     let input = 0;
     if(inputAmt){
         input = parseFloat(inputAmt.value) || 0 ;
-    }
-    
+    }    
    
     const selectedTotal = selectedPayments.reduce((sum, p) => sum + p.amount, 0);  
-   
-    
+       
     const cashFlowAmt = input - selectedTotal;
     const cashFlow = document.getElementById('cashflowBalance');
     if(cashFlow){
@@ -383,22 +410,19 @@ function openReceiptModal(paymentId, url) {
     }else{
         document.getElementById('receipt-url-input').value = url;
         modal.show();
-    }
-    
-    
-    
-  }
+    }  
+}
 
 async function saveReceiptLink() {
-const url = document.getElementById('receipt-url-input').value.trim();
+    const url = document.getElementById('receipt-url-input').value.trim();
 
-payment = {
-    receipt_url: url
-};
+    payment = {
+        receipt_url: url
+    };
 
-await updatePayment(currentPaymentId, payment);
+    await updatePayment(currentPaymentId, payment);
 
-bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
+    bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
 }
 
 //Filter Show/Hide
@@ -415,4 +439,5 @@ function toggleList(){
     const icon = document.getElementById('toggleSelectedList');
     list.classList.toggle('show')
 }
+
 

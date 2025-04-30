@@ -37,12 +37,17 @@
 
     <!-- Specific JS -->
     <!-- <script src="Scripts/payments.js"></script>       -->
+    <script src="Scripts/icon.js"></script>
 </head>
 
       <body>
+        
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container-fluid">
-              <a class="navbar-brand" href="payments.html">Payment</a>
+              <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <svg class="icon icon-logo" width="30" height="30" aria-hidden="true"><use href="#logo-symbol"></use></svg>  
+                <span class="mx-2">Payment</span>
+              </a>
               <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
               </button>
@@ -52,45 +57,47 @@
                   <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                   <li class="nav-item"><a class="nav-link" href="bills.html">Bills</a></li>
                   <li class="nav-item"><a class="nav-link" href="payments.html">Payments</a></li>
+                  <li class="nav-item"><a class="nav-link" href="settings.html">Settings</a></li>
                   <li class="nav-item"><a class="nav-link" href="logout.html">Logout</a></li>
                 </ul>
               </div>
             </div>
           </nav>
-        <form id="paymentForm"  class="p-3">
-            <div class="mb-3">
-            <label class="form-label">Bill</label>
-            <select class="form-select" id="paymentBill" onchange="defaultFromBill()">
-                <option value=""></option>
-            </select>
+        
+          <form id="paymentForm"  class="p-3">
+            <div class="form-floating mb-3">
+              <select class="form-select" id="paymentBill" onchange="defaultFromBill()" placeholder="Bill">
+                  <option value=""></option>
+              </select>
+              <label class="form-label" for="paymentBill">Bill</label>
             </div>
-          <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" class="form-control" id="paymentName" required>
+          <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="paymentName" required placeholder="Name">
+            <label for="paymentName">Name</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Notes</label>
-            <input type="text" class="form-control" id="paymentNotes">
+          <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="paymentNotes" placeholder="Notes">
+            <label for="paymentNotes">Notes</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Amount</label>
-            <input type="number" step=".01" class="form-control" id="paymentAmount" required>
+          <div class="form-floating mb-3">
+            <input type="number" step=".01" class="form-control" placeholder="Amount" id="paymentAmount" required>
+            <label for="paymentAmount">Amount</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Due Date</label>
-            <input type="date" class="form-control" id="paymentDueDate" required>
+          <div class="form-floating mb-3">
+            <input type="date" class="form-control" id="paymentDueDate" placeholder="DueDate" required>
+            <label class="form-label" for="paymentDueDate">Due Date</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Planned Date</label>
-            <input type="date" class="form-control" id="paymentPlannedDate" required>
+          <div class="form-floating mb-3">
+            <input type="date" class="form-control" id="paymentPlannedDate" placeholder="PlannedDate" required>
+            <label for="paymentPlannedDate">Planned Date</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Paid Date</label>
-            <input type="date" class="form-control" id="paymentPaidDate">
+          <div class="form-floating mb-3">
+            <input type="date" class="form-control" id="paymentPaidDate" placeholder="Paid Date">
+            <label for="paymentPaidDate">Paid Date</label>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Receipt URL</label>
-            <input type="text" class="form-control" id="paymentReceiptURL">
+          <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="paymentReceiptURL" placeholder="Receipt URL">
+            <label for="paymentReceiptURL">Receipt URL</label>
           </div>
           <button type="submit" class="btn btn-sm btn-primary">Submit</button>
           <button type="button" class="btn btn-sm btn-danger" onclick="cancelAddPayment()">Cancel</button>

@@ -37,13 +37,15 @@
     
         <!-- Specific JS -->
         <!-- <script src="Scripts/payments.js"></script>       -->
+         <script src="Scripts/icon.js"></script>
     </head>
 <body class="bg-light">
 
 <div class="container vh-100 d-flex align-items-center justify-content-center">
   <div class="text-center">
-    <h1 class="mb-3">👋 See you next time!</h1>
-    <p class="text-muted">We are logging you out...</p>
+    <svg class="icon icon-logo" style="color: #6f42c1;" width="72" height="72" aria-hidden="true"><use href="#logo-symbol"></use></svg>  
+    <h2 class="mb-3">Thanks for using Bill Tracker!</h2>
+    <p id="logoutMsg" class="text-muted">We are logging you out...</p>
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Logging out...</span>
     </div>
@@ -53,10 +55,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="/Scripts/supabase-auth.js"></script>
 <script>
-  // Auto logout when page loads
+ // Auto logout when page loads
   (async function() {
     try {
       await logout();
+      const MsgText = document.getElementById("logoutMsg");
+      MsgText.Context = "You have been logged out."
       // logout() redirects to login.html automatically
     } catch (error) {
       alert('Logout failed: ' + error.message);
@@ -64,7 +68,7 @@
     }
   })();
 
-  redirectIfNotLoggedIn();
+  //redirectIfNotLoggedIn();
 </script>
 
 </body>
