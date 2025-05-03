@@ -39,4 +39,21 @@ async function applySavedTheme() {
     if (link) link.href = themeUrls[theme];
   }
 
+  function applySavedThemeLink() {
+    let theme = localStorage.getItem('bt-theme');
+  
+    // const { data: { user } } = await supabaseClient.auth.getUser();
+    // theme = user?.user_metadata.theme || theme;
+  
+    if (!theme || !(theme in themeUrls)) {
+      theme = 'bootstrap';
+    }
+
+    const link = document.createElement('link');
+      link.id = 'themeStylesheet';
+      link.rel = 'stylesheet';
+      link.href = themeUrls[theme];
+      document.head.appendChild(link);
+  }
+
 // window.applySavedTheme = applySavedTheme;
