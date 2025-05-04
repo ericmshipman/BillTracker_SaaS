@@ -335,6 +335,11 @@ function updateCashFlow()
     if(cashFlow){
         cashFlow.value = `${cashFlowAmt.toFixed(2)}`;
     }
+
+    //update bubble. 
+    const perc = input != 0 ? selectedTotal/input : 1.00;
+    console.log(perc);
+    bubble.update(perc * 100);
 }
 
 function visitURL(url, billId){
@@ -439,5 +444,7 @@ function toggleList(){
     const icon = document.getElementById('toggleSelectedList');
     list.classList.toggle('show')
 }
+
+
 
 

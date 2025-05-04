@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-        <title>Home</title>
+        <title>Home</title>      
     
         <!-- Supabase -->
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -50,6 +50,10 @@
         <script src="Scripts/payments.js"></script>  
     
         <script src="Scripts/icon.js"></script>
+
+                <!-- Bubble CSS -->
+        <link rel="stylesheet" href="CSS/bubble.css"/>
+        <script src="Scripts/bubble.js"></script>  
     </head>
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
@@ -123,13 +127,23 @@
             </div>
         </div>
 
-        <ul class="list-group collapse show" id="itemlist"></ul>            
+        <ul class="list-group collapse" id="itemlist"></ul>            
         </div>
         
     <script>
         //window.location.href = "payments.html";
         redirectIfNotLoggedIn();
         initHomePage();
+    </script>
+
+    <div id="bubble-container" class="my-2 p-2"></div>
+
+    <script>
+    //import { createBubbleWithFluid } from './Scripts/bubble.js';
+    // draw at 50%
+    const bubble = createBubbleWithFluid('#bubble-container', 0);
+
+    // later: bubble.update(75);
     </script>
 </body>
 </html>

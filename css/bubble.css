@@ -1,0 +1,42 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+  }
+  
+  /* Container must match your 650×650 SVG */
+  #bubble-container {
+    width: 375px;       /* or 650px—whatever you’re using */
+    height: 375px;
+    margin: 2rem auto;
+    position: relative;
+    border-radius: 50%;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  /* ensure the SVG fills the container exactly */
+#bubble-container svg {
+    display: block;     /* removes any inline whitespace */
+    width: 100%;
+    height: 100%;
+  } 
+  
+  /* Original inline keyframes & selectors */
+  @keyframes hue-shift {
+    0%   { filter: hue-rotate(0deg); }
+    50%  { filter: hue-rotate(180deg); }
+    100% { filter: hue-rotate(360deg); }
+  }
+  #bubble-container .iridescent {
+    mix-blend-mode: screen;                 /* back to screen */
+    animation: hue-shift 10s linear infinite;
+  }
+  
+  @keyframes wave {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-260px); }
+  }
+  #bubble-container .wave {
+    animation: wave 6s linear infinite;
+  }
