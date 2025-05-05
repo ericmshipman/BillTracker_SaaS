@@ -6,8 +6,8 @@ html, body {
   
   /* Container must match your 650×650 SVG */
   #bubble-container {
-    width: 375px;       /* or 650px—whatever you’re using */
-    height: 375px;
+    width: 300px;       /* or 650px—whatever you’re using */
+    height: 300px;
     margin: 2rem auto;
     position: relative;
     border-radius: 50%;

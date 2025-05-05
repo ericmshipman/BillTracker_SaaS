@@ -13,7 +13,7 @@ function createBubbleWithFluid(containerSelector, fillPercent = 50) {
         ? document.querySelector(containerSelector)
         : containerSelector;
     const NS = 'http://www.w3.org/2000/svg';
-    const size = 375, cx = size/2, cy = size/2, r = size/2 - 1;
+    const size = 300, cx = size/2, cy = size/2, r = size/2 - 1;
     const liquidColor = "white";
   
     // 1) SVG root
