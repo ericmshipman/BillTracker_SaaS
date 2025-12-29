@@ -54,9 +54,9 @@ function getThemeColors() {
     return {
         allocated: colorToRgba(danger, 0.8),      // Danger color for allocated payments
         available: colorToRgba(success, 0.8),    // Success color for available balance
-        paid: colorToRgba(success, 0.6),         // Success color for paid
-        unpaid: colorToRgba(warning, 0.6),        // Warning color for unpaid
-        late: colorToRgba(danger, 0.6),          // Danger color for late
+        paid: colorToRgba(success, 0.8),         // Success color for paid
+        unpaid: colorToRgba(warning, 0.8),        // Warning color for unpaid
+        late: colorToRgba(danger, 0.8),          // Danger color for late
         primary: colorToRgba(primary, 0.8),       // Primary theme color
         info: colorToRgba(info, 0.6),            // Info color
         background: 'rgba(255, 255, 255, 0.1)'
