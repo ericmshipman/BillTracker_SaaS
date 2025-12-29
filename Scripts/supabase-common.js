@@ -87,7 +87,7 @@ async function getPayments(start_date, end_date, status = "both") {
   }
 
   if(end_date){
-    qy = qy.gte('planned_date',end_date);
+    qy = qy.lte('planned_date',end_date);
   }
 
   const { data, error } = await qy.order("planned_date", {ascending: false}).order("name");

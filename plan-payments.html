@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+        <title>Plan Payments</title>
+    
+        <!-- Supabase -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    
+        <!-- Supabase - Auth -->
+        <script src="Scripts/supabase-auth.js"></script>
+    
+        <!-- Supabase - Crud -->
+        <script src="Scripts/supabase-common.js"></script>
+    
+        <!-- Global CSS -->
+        <link rel="stylesheet" href="CSS/style.css"/>
+    
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+        
+        <!-- Theme -->
+        <script src="Scripts/theme.js"></script>
+        <link id="themeStylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <script>
+            let theme = localStorage.getItem('bt-theme');
+            
+            if (!theme || !(theme in themeUrls)) {
+              theme = 'bootstrap';
+            }
+            const link = document.createElement('link');
+              link.id = 'themeStylesheet';
+              link.rel = 'stylesheet';
+              link.href = themeUrls[theme];
+              document.head.appendChild(link);
+          </script>
+      
+    
+        <!-- Icons -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"></link>
+    
+        <!-- Shared JS -->
+        <script src="Scripts/script.js"></script>  
+    
+        <!-- Specific JS -->
+        <script src="Scripts/plan-payments.js"></script>   
+        
+        <script src="Scripts/icon.js"></script>
+    </head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <svg class="icon icon-logo" width="30" height="30" aria-hidden="true"><use href="#logo-symbol"></use></svg>  
+                <span class="mx-2">Plan Future Payments</span>
+              </a>
+            
+
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+              <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+              <li class="nav-item"><a class="nav-link" href="bills.html">Bills</a></li>
+              <li class="nav-item"><a class="nav-link" href="payments.html">Payments</a></li>
+              <li class="nav-item"><a class="nav-link" href="settings.html">Settings</a></li>
+              <li class="nav-item"><a class="nav-link" href="logout.html">Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+    <div class="container my-4">        
+        <form class="p-3">
+            <div class="mb-3">
+                <label class="form-label">Generation Mode:</label>
+                <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="generationMode" id="modeBills" value="bills" checked onchange="updateModeUI()">
+                    <label class="btn btn-outline-primary" for="modeBills">
+                        <i class="bi-receipt"></i> From Bills
+                    </label>
+                    
+                    <input type="radio" class="btn-check" name="generationMode" id="modePayments" value="payments" onchange="updateModeUI()">
+                    <label class="btn btn-outline-primary" for="modePayments">
+                        <i class="bi-credit-card"></i> From Payments
+                    </label>
+                </div>
+            </div>
+            <div id="billsModeInputs">
+                <div class="input-group mb-3">
+                    <i class="bi-calendar-event text-primary fs-4 input-group-text"></i>
+                    <div class="form-floating flex-grow-1">
+                        <input type="date" class="form-control" id="startDate" required>
+                        <label for="startDate">Start Date</label>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <i class="bi-calendar-check text-primary fs-4 input-group-text"></i>
+                    <div class="form-floating flex-grow-1">
+                        <input type="date" class="form-control" id="endDate" required>
+                        <label for="endDate">End Date</label>
+                    </div>
+                </div>
+            </div>
+            <div id="paymentsModeInputs" style="display: none;">
+                <div class="input-group mb-3">
+                    <i class="bi-calendar-event text-primary fs-4 input-group-text"></i>
+                    <div class="form-floating flex-grow-1">
+                        <input type="date" class="form-control" id="copyStartDate" required>
+                        <label for="copyStartDate">Start Date</label>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <i class="bi-calendar-check text-primary fs-4 input-group-text"></i>
+                    <div class="form-floating flex-grow-1">
+                        <input type="date" class="form-control" id="copyEndDate" required>
+                        <label for="copyEndDate">End Date</label>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <i class="bi-arrow-repeat text-primary fs-4 input-group-text"></i>
+                    <div class="form-floating flex-grow-1">
+                        <input type="number" class="form-control" id="iterateAmount" min="1" value="1" required>
+                        <label for="iterateAmount">Increment</label>
+                    </div>
+                    <select class="form-select" id="iterateUnit" style="width: auto;">
+                        <option value="Month">Month(s)</option>
+                        <option value="Year" selected>Year(s)</option>
+                    </select>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary w-100" onclick="generatePayments()">
+                <i class="bi-calendar-check"></i> Generate Payments
+            </button>
+        </form>
+
+        <!-- Toast Container -->
+        <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055;">
+            <div id="statusToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto" id="toastTitle">Status</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body" id="toastBody">
+                    Generating payments...
+                </div>
+            </div>
+        </div>
+
+        <div id="previewSection" style="display: none;" class="p-3">
+            <div class="d-flex align-items-center mb-3">
+                <span class="badge bg-primary me-2" id="totalGenerated">0 payments</span>
+                <span class="badge bg-warning me-2" id="duplicateCount" role="button" onclick="scrollToDuplicates()" style="cursor: pointer;">0 duplicates</span>
+                <span class="badge bg-success" id="selectedCount" role="button" onclick="toggleSelectAll()" style="cursor: pointer;">0 selected</span>
+            </div>
+            
+            <div id="paymentPreview"></div>
+            
+            <div class="mt-3">
+                <button type="button" class="btn btn-success" id="saveButton" onclick="saveSelectedPayments()" disabled>
+                    <i class="bi-save"></i> Save Selected Payments
+                </button>
+                <button type="button" class="btn btn-secondary ms-2" onclick="clearPreview()">
+                    <i class="bi-x-circle"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        redirectIfNotLoggedIn();
+        
+        // Set default dates (current year)
+        window.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const yearStart = new Date(today.getFullYear(), 0, 1);
+            const yearEnd = new Date(today.getFullYear(), 11, 31);
+            
+            document.getElementById('startDate').value = yearStart.toISOString().split('T')[0];
+            document.getElementById('endDate').value = yearEnd.toISOString().split('T')[0];
+            
+            // Set default copy dates (current year)
+            document.getElementById('copyStartDate').value = yearStart.toISOString().split('T')[0];
+            document.getElementById('copyEndDate').value = yearEnd.toISOString().split('T')[0];
+            
+            // Initialize mode UI
+            updateModeUI();
+        });
+    </script>
+</body>
+</html>
+
