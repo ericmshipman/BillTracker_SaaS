@@ -157,6 +157,17 @@ async function renderItems(payments, paymentsDate) {
     }
 
     list.innerHTML = "";
+    
+    // Update charts after rendering items
+    setTimeout(() => {
+        if (typeof window.charts !== 'undefined' && window.charts) {
+            const paymentData = calculatePaymentStatus();
+            const inputAmt = document.getElementById('bankBalance');
+            const input = inputAmt ? (parseFloat(inputAmt.value) || 0) : 0;
+            const selectedTotal = selectedPayments.reduce((sum, p) => sum + p.amount, 0);
+            window.charts.updateCharts(input, selectedTotal, paymentData);
+        }
+    }, 100);
 
     if(renderType==="card"){
         payments.forEach(payment => {
@@ -327,7 +338,7 @@ function updateCashFlow()
     if(inputAmt){
         input = parseFloat(inputAmt.value) || 0 ;
     }    
-   
+    
     const selectedTotal = selectedPayments.reduce((sum, p) => sum + p.amount, 0);  
        
     const cashFlowAmt = input - selectedTotal;
@@ -336,10 +347,61 @@ function updateCashFlow()
         cashFlow.value = `${cashFlowAmt.toFixed(2)}`;
     }
 
-    //update bubble. 
-    const perc = input != 0 ? selectedTotal/input : 1.00;
-    console.log(perc);
-    bubble.update(perc * 100);
+    // Update charts if available
+    if (typeof window.charts !== 'undefined' && window.charts) {
+        // Calculate payment status breakdown from filtered payments
+        const paymentData = calculatePaymentStatus();
+        window.charts.updateCharts(input, selectedTotal, paymentData);
+    }
+}
+
+function calculatePaymentStatus() {
+    // Get all payments for the selected date(s) from paymentsDate
+    let paymentsToAnalyze = [];
+    
+    // Get the filtered payments based on selected dates
+    const select = document.getElementById('plannedDateSelect');
+    const selectedDates = select ? Array.from(select.selectedOptions).map(opt => opt.value) : [];
+    
+    if (selectedDates.length > 0) {
+        paymentsToAnalyze = allPayments.filter(p => selectedDates.includes(p.planned_date.split('T')[0]));
+    } else {
+        paymentsToAnalyze = allPayments;
+    }
+    
+    // Calculate totals by status
+    let paid = 0;
+    let unpaid = 0;
+    let late = 0;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    paymentsToAnalyze.forEach(payment => {
+        const amount = parseFloat(payment.amount) || 0;
+        const dueDate = new Date(payment.due_date);
+        dueDate.setHours(0, 0, 0, 0);
+        
+        if (payment.paid_date) {
+            paid += amount;
+            // Check if it was paid late
+            if (dueDate < new Date(payment.paid_date.split('T')[0])) {
+                late += amount;
+            }
+        } else {
+            unpaid += amount;
+            // Check if it's currently late
+            if (dueDate < today) {
+                late += amount;
+            }
+        }
+    });
+    
+    return {
+        paid: paid,
+        unpaid: unpaid,
+        late: late
+    };
 }
 
 function visitURL(url, billId){
