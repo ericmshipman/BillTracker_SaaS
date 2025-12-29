@@ -7,9 +7,36 @@ let selectedPayments = [];
 let showPaid = false;
 let renderType = "card";
 
+// localStorage keys for persistence
+const STORAGE_KEY_SELECTED_DATES = 'bt-payments-selected-dates';
+const STORAGE_KEY_SHOW_PAID = 'bt-payments-show-paid';
+const STORAGE_KEY_HOME_SELECTED_DATES = 'bt-home-selected-dates';
+const STORAGE_KEY_HOME_SHOW_PAID = 'bt-home-show-paid';
+
+/**
+ * Determine if we're on the home page
+ */
+function isHomePage() {
+    return window.location.pathname.endsWith('index.html') || 
+           window.location.pathname === '/' || 
+           window.location.pathname.endsWith('/');
+}
+
 async function initPaymentsPage() {
     allPayments = await getPayments();
     await loadPlannedDates(); // load select options
+    
+    // Restore showPaid checkbox state from localStorage
+    const savedShowPaid = localStorage.getItem(STORAGE_KEY_SHOW_PAID);
+    const showPaidCheckbox = document.getElementById('showPaid');
+    if (showPaidCheckbox && savedShowPaid !== null) {
+        showPaidCheckbox.checked = savedShowPaid === 'true';
+        const label = document.getElementById('showPaidLabel');
+        if (label) {
+            label.innerText = showPaidCheckbox.checked ? "Hide Paid" : "Show Paid";
+        }
+    }
+    
     selectClosestPlannedDate();
 }
 
@@ -17,6 +44,18 @@ async function initHomePage() {
     renderType = "list";
     allPayments = await getPayments();
     await loadPlannedDates(); // load select options
+    
+    // Restore showPaid checkbox state from localStorage (home page)
+    const savedShowPaid = localStorage.getItem(STORAGE_KEY_HOME_SHOW_PAID);
+    const showPaidCheckbox = document.getElementById('showPaid');
+    if (showPaidCheckbox && savedShowPaid !== null) {
+        showPaidCheckbox.checked = savedShowPaid === 'true';
+        const label = document.getElementById('showPaidLabel');
+        if (label) {
+            label.innerText = showPaidCheckbox.checked ? "Hide Paid" : "Show Paid";
+        }
+    }
+    
     selectClosestPlannedDate();
     //Retreive Balance
     retreiveBankBal();
@@ -40,18 +79,54 @@ async function loadPlannedDates() {
 }
 
 function selectClosestPlannedDate() {
-    const plannedDateKey = getDefaultPlannedDate();
     const select = document.getElementById('plannedDateSelect');
     
     if (!select) return;
 
-    // Try to find a matching option
-    const options = Array.from(select.options);
-    const match = options.find(opt => opt.value === plannedDateKey);
-
-    if (match) {
-        select.value = plannedDateKey;
+    // Determine which page we're on and use appropriate storage key
+    const isHome = isHomePage();
+    const storageKey = isHome ? STORAGE_KEY_HOME_SELECTED_DATES : STORAGE_KEY_SELECTED_DATES;
+    
+    // Check localStorage for saved selected dates
+    const savedDates = localStorage.getItem(storageKey);
+    let datesToSelect = [];
+    
+    if (savedDates) {
+        try {
+            datesToSelect = JSON.parse(savedDates);
+        } catch (e) {
+            console.warn('Failed to parse saved dates from localStorage:', e);
+            datesToSelect = [];
+        }
     }
+    
+    const options = Array.from(select.options);
+    const availableDates = options.map(opt => opt.value);
+    
+    // Clear all selections first
+    options.forEach(opt => opt.selected = false);
+    
+    // Filter saved dates to only include those that still exist
+    const validDates = datesToSelect.filter(date => availableDates.includes(date));
+    
+    if (validDates.length > 0) {
+        // Restore saved selections
+        validDates.forEach(date => {
+            const option = options.find(opt => opt.value === date);
+            if (option) {
+                option.selected = true;
+            }
+        });
+    } else {
+        // No valid saved dates, fall back to auto-selection
+        const plannedDateKey = getDefaultPlannedDate();
+        const match = options.find(opt => opt.value === plannedDateKey);
+        
+        if (match) {
+            match.selected = true;
+        }
+    }
+    
     updateFilterState();
 }
 
@@ -62,7 +137,51 @@ function updateFilterState() {
     const showPaidCheckbox = document.getElementById('showPaid');
     showPaid = showPaidCheckbox ? showPaidCheckbox.checked : false;
 
+    // Determine which page we're on and use appropriate storage keys
+    const isHome = isHomePage();
+    const datesStorageKey = isHome ? STORAGE_KEY_HOME_SELECTED_DATES : STORAGE_KEY_SELECTED_DATES;
+    const showPaidStorageKey = isHome ? STORAGE_KEY_HOME_SHOW_PAID : STORAGE_KEY_SHOW_PAID;
+
+    // Save to localStorage
+    if (selectedDates.length > 0) {
+        localStorage.setItem(datesStorageKey, JSON.stringify(selectedDates));
+    } else {
+        // Clear saved dates if nothing is selected
+        localStorage.removeItem(datesStorageKey);
+    }
+    
+    if (showPaidCheckbox) {
+        localStorage.setItem(showPaidStorageKey, showPaidCheckbox.checked.toString());
+    }
+
     filterAndRenderPayments();
+}
+
+/**
+ * Reset filter state to auto-selected date
+ */
+function resetFilterState() {
+    // Determine which page we're on and use appropriate storage keys
+    const isHome = isHomePage();
+    const datesStorageKey = isHome ? STORAGE_KEY_HOME_SELECTED_DATES : STORAGE_KEY_SELECTED_DATES;
+    const showPaidStorageKey = isHome ? STORAGE_KEY_HOME_SHOW_PAID : STORAGE_KEY_SHOW_PAID;
+    
+    // Clear saved filter state from localStorage
+    localStorage.removeItem(datesStorageKey);
+    localStorage.removeItem(showPaidStorageKey);
+    
+    // Reset showPaid checkbox to default (checked for home, unchecked for payments)
+    const showPaidCheckbox = document.getElementById('showPaid');
+    if (showPaidCheckbox) {
+        showPaidCheckbox.checked = isHome; // true for home page, false for payments page
+        const label = document.getElementById('showPaidLabel');
+        if (label) {
+            label.innerText = showPaidCheckbox.checked ? "Hide Paid" : "Show Paid";
+        }
+    }
+    
+    // Restore auto-selection
+    selectClosestPlannedDate();
 }
 
 function filterAndRenderPayments() {

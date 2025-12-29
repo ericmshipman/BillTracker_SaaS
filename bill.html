@@ -31,11 +31,16 @@
       if (!theme || !(theme in themeUrls)) {
         theme = 'bootstrap';
       }
-      const link = document.createElement('link');
-        link.id = 'themeStylesheet';
-        link.rel = 'stylesheet';
-        link.href = themeUrls[theme];
-        document.head.appendChild(link);
+      // Check if link already exists, otherwise create it
+      let link = document.getElementById('themeStylesheet');
+      if (!link) {
+          link = document.createElement('link');
+          link.id = 'themeStylesheet';
+          link.rel = 'stylesheet';
+          document.head.appendChild(link);
+      }
+      // Update the existing link's href
+      link.href = themeUrls[theme];
     </script>
 
     <!-- Icons -->

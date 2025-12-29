@@ -28,15 +28,29 @@ const themeUrls = {
 async function applySavedTheme() {
     let theme = localStorage.getItem('bt-theme');
   
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    theme = user?.user_metadata.theme || theme;
-  
-    if (!theme || !(theme in themeUrls)) {
-      theme = 'bootstrap';
+    try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const userTheme = user?.user_metadata?.theme;
+        
+        // User metadata is source of truth - use it if available
+        if (userTheme && userTheme in themeUrls) {
+            theme = userTheme;
+            // Sync localStorage with user metadata
+            localStorage.setItem('bt-theme', theme);
+        } else if (!theme || !(theme in themeUrls)) {
+            theme = 'bootstrap';
+        }
+    } catch (error) {
+        // If auth fails, fall back to localStorage or default
+        if (!theme || !(theme in themeUrls)) {
+            theme = 'bootstrap';
+        }
     }
   
     const link = document.getElementById('themeStylesheet');
-    if (link) link.href = themeUrls[theme];
+    if (link) {
+        link.href = themeUrls[theme];
+    }
   }
 
   function applySavedThemeLink() {
@@ -56,4 +70,5 @@ async function applySavedTheme() {
       document.head.appendChild(link);
   }
 
-// window.applySavedTheme = applySavedTheme;
+// Make function globally accessible
+window.applySavedTheme = applySavedTheme;

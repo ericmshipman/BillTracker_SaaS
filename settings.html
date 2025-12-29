@@ -110,7 +110,11 @@
 </div>
 <script>
   // Ensure user is logged in
-  redirectIfNotLoggedIn();
+  (async () => {
+    await redirectIfNotLoggedIn();
+    // Apply theme from user metadata after authentication
+    await applySavedTheme();
+  })();
 
   // Elements
   const themeSelect = document.getElementById('themeSelect');

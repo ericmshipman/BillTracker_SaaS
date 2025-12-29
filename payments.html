@@ -34,11 +34,16 @@
       theme = 'bootstrap';
     }
   
-    const link = document.createElement('link');
-      link.id = 'themeStylesheet';
-      link.rel = 'stylesheet';
-      link.href = themeUrls[theme];
-      document.head.appendChild(link);
+    // Check if link already exists, otherwise create it
+    let link = document.getElementById('themeStylesheet');
+    if (!link) {
+        link = document.createElement('link');
+        link.id = 'themeStylesheet';
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+    }
+    // Update the existing link's href
+    link.href = themeUrls[theme];
         </script>
     
         <!-- Icons -->
@@ -85,9 +90,14 @@
                 <input class="form-check-input" type="checkbox" role="switch" id="showPaid" onchange="onShowPaidChange()">
                 <label class="form-check-label" for="showPaid" id="showPaidLabel">Show Paid</label>
             </div>
-            <span class="px-0 rounded hover-bg-light" role="button" id="filterButton" onclick="toggleFilterCard()">
-                <i class="bi-funnel text-primary fs-4" id="toggleFilter" ></i>
-            </span>    
+            <div class="d-flex align-items-center">
+                <span class="px-0 rounded hover-bg-light" role="button" id="filterButton" onclick="toggleFilterCard()">
+                    <i class="bi-funnel text-primary fs-4" id="toggleFilter" ></i>
+                </span>
+                <span class="px-2 rounded hover-bg-light" role="button" onclick="resetFilterState()" title="Reset to auto-selected date">
+                    <i class="bi-arrow-clockwise text-primary fs-4"></i>
+                </span>
+            </div>
         </div>
 
         <div class="card collapse-custom" id="filterCard">
@@ -136,8 +146,14 @@
         </div>
         </div>
     </div>  
-    <script>redirectIfNotLoggedIn();</script>
-    <script>initPaymentsPage();</script>
+    <script>
+        (async () => {
+            await redirectIfNotLoggedIn();
+            // Apply theme from user metadata after authentication
+            await applySavedTheme();
+            initPaymentsPage();
+        })();
+    </script>
     
 </body>
 </html>
