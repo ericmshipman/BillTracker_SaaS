@@ -37,6 +37,11 @@ async function initPaymentsPage() {
         }
     }
     
+    // Update late payment styles to match theme
+    if (typeof updateLatePaymentStyles === 'function') {
+        updateLatePaymentStyles();
+    }
+    
     selectClosestPlannedDate();
 }
 

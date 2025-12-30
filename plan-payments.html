@@ -61,7 +61,7 @@
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="index.html">
                 <svg class="icon icon-logo" width="30" height="30" aria-hidden="true"><use href="#logo-symbol"></use></svg>  
-                <span class="mx-2">Plan Future Payments</span>
+                <span class="mx-2">Plan Payments</span>
               </a>
             
 
@@ -84,7 +84,16 @@
     <div class="container my-4">        
         <form class="p-3">
             <div class="mb-3">
-                <label class="form-label">Generation Mode:</label>
+                <div class="d-flex align-items-center mb-2">
+                    <label class="form-label mb-0 me-2">Generation Mode:</label>
+                    <i class="bi-info-circle text-primary" 
+                       data-bs-toggle="popover" 
+                       data-bs-trigger="hover focus"
+                       data-bs-placement="right"
+                       data-bs-html="true"
+                       data-bs-content="<strong>From Bills:</strong> Generates payments based on your bill recurrence patterns for the selected date range.<br><br><strong>From Payments:</strong> Copies existing payments from a date range and shifts them forward by the specified increment (months or years), preserving any modifications you made to amounts, due dates, or notes."
+                       style="cursor: help;"></i>
+                </div>
                 <div class="btn-group w-100" role="group">
                     <input type="radio" class="btn-check" name="generationMode" id="modeBills" value="bills" checked onchange="updateModeUI()">
                     <label class="btn btn-outline-primary" for="modeBills">
@@ -200,6 +209,10 @@
             
             // Initialize mode UI
             updateModeUI();
+            
+            // Initialize popovers
+            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+            const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
         });
     </script>
 </body>

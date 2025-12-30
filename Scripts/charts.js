@@ -227,13 +227,85 @@ function initializeCharts() {
     };
 }
 
+/**
+ * Update late payment styles to use Bootstrap theme colors
+ */
+function updateLatePaymentStyles() {
+    const root = document.documentElement;
+    
+    // Get Bootstrap danger color from CSS variables
+    function getCSSVar(variable, fallback) {
+        const value = getComputedStyle(root).getPropertyValue(variable).trim();
+        return value || fallback;
+    }
+    
+    const dangerColor = getCSSVar('--bs-danger', '#dc3545');
+    
+    // Convert color to RGB (handles both hex and RGB/RGBA formats)
+    function colorToRgb(color) {
+        if (!color) return { r: 220, g: 53, b: 69 }; // Default Bootstrap danger color
+        
+        // Handle RGB/RGBA values
+        const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+        if (rgbMatch) {
+            return {
+                r: parseInt(rgbMatch[1], 10),
+                g: parseInt(rgbMatch[2], 10),
+                b: parseInt(rgbMatch[3], 10)
+            };
+        }
+        
+        // Handle hex values
+        const hexMatch = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+        if (hexMatch) {
+            return {
+                r: parseInt(hexMatch[1], 16),
+                g: parseInt(hexMatch[2], 16),
+                b: parseInt(hexMatch[3], 16)
+            };
+        }
+        
+        // Handle 3-digit hex
+        const hex3Match = /^#?([a-f\d])([a-f\d])([a-f\d])$/i.exec(color);
+        if (hex3Match) {
+            return {
+                r: parseInt(hex3Match[1] + hex3Match[1], 16),
+                g: parseInt(hex3Match[2] + hex3Match[2], 16),
+                b: parseInt(hex3Match[3] + hex3Match[3], 16)
+            };
+        }
+        
+        // Fallback
+        return { r: 220, g: 53, b: 69 };
+    }
+    
+    const rgb = colorToRgb(dangerColor);
+    
+    // Set CSS variables for late payment styles
+    root.style.setProperty('--late-gradient-end', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.05)`);
+    root.style.setProperty('--late-bg-color', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`);
+    root.style.setProperty('--late-bg-color-dark', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`);
+    root.style.setProperty('--late-border-color', dangerColor);
+}
+
 // Global function to update charts theme (can be called from anywhere)
 window.updateChartsTheme = function() {
     if (window.charts && typeof window.charts.updateTheme === 'function') {
         // Wait a bit for CSS to load after theme change
         setTimeout(() => {
             window.charts.updateTheme();
+            updateLatePaymentStyles();
         }, 150);
     }
 };
+
+// Make function globally accessible
+window.updateLatePaymentStyles = updateLatePaymentStyles;
+
+// Initialize late payment styles on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateLatePaymentStyles);
+} else {
+    updateLatePaymentStyles();
+}
 

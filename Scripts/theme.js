@@ -50,6 +50,12 @@ async function applySavedTheme() {
     const link = document.getElementById('themeStylesheet');
     if (link) {
         link.href = themeUrls[theme];
+        // Update late payment styles after theme loads
+        link.addEventListener('load', () => {
+            if (typeof updateLatePaymentStyles === 'function') {
+                setTimeout(updateLatePaymentStyles, 100);
+            }
+        });
     }
   }
 
