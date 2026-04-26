@@ -80,57 +80,64 @@
           </div>
         </nav>
         <form id="billForm" class="p-3">
-          <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="billName" required>
-            <label class="form-label" for=""billName>Name</label>
-          </div>
-          <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="billURL">
-            <label for="billURL" class="form-label">URL</label>
-            <div class="invalid-feedback">
-              Update the URL
+            <div style="padding-bottom: 110px;">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="billName" required>
+                    <label class="form-label" for="" billName>Name</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="billURL">
+                    <label for="billURL" class="form-label">URL</label>
+                    <div class="invalid-feedback">
+                        Update the URL
+                    </div>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="number" step=".01" class="form-control" id="billAmount" required>
+                    <label for="billAmount" class="form-label">Amount</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="date" class="form-control" id="dueDate" required>
+                    <label for="dueDate" class="form-label">Due Date</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="number" step="1" class="form-control" id="payPeriod" value="1">
+                    <label for="payPeriod" class="form-label">Pay Period</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="billOccursEvery" required>
+                    <label for="billOccursEvery" class="form-label">Occurs Every</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="billOccursType" required>
+                        <option value="Day">Day(s)</option>
+                        <option value="Week">Week(s)</option>
+                        <option value="Month">Month(s)</option>
+                        <option value="Year">Year(s)</option>
+                    </select>
+                    <label for="billOccursType" class="form-label">Occurs Type</label>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" class="form-check-input" role="switch" id="billAutopay"></input>
+                        <label for="billAutopay" class="form-check-label">Autopay</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input type="checkbox" class="form-check-input" role="switch" id="billArchived" onclick="archivedOnChange()"></input>
+                        <label for="billArchived" class="form-check-label">Archived</label>
+                    </div>
+                </div>
+                <div class="my-3">
+
+                </div>
+                <div class="fixed-bottom border-top bg-body p-2">
+                    <div class="container ">
+                        <button type="submit" class="btn btn-sm btn-primary my-4">Submit</button>
+                        <button type="button" class="btn btn-sm btn-danger my-4" onclick="cancelAddBill()">Cancel</button>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="form-floating mb-3">
-            <input type="number" step=".01" class="form-control" id="billAmount" required>
-            <label for="billAmount" class="form-label">Amount</label>
-          </div>
-          <div class="form-floating mb-3">
-            <input type="date" class="form-control" id="dueDate" required>
-            <label for="dueDate" class="form-label">Due Date</label>
-          </div>
-          <div class="form-floating mb-3">
-            <input type="number" step="1" class="form-control" id="payPeriod" value="1">
-            <label for="payPeriod" class="form-label">Pay Period</label>
-          </div>
-          <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="billOccursEvery" required>
-            <label for="billOccursEvery" class="form-label">Occurs Every</label>
-          </div>
-          <div class="form-floating mb-3">
-            <select class="form-select" id="billOccursType" required>
-              <option value="Day">Day(s)</option>
-              <option value="Week">Week(s)</option>
-              <option value="Month">Month(s)</option>
-              <option value="Year">Year(s)</option>
-            </select>
-            <label for="billOccursType" class="form-label">Occurs Type</label>
-          </div>
-          <div class="d-flex justify-content-between">
-            <div class="form-check form-switch">
-              <input type="checkbox" class="form-check-input" role="switch" id="billAutopay"></input>
-              <label for="billAutopay" class="form-check-label">Autopay</label>
-            </div>
-            <div class="form-check form-switch">
-              <input type="checkbox" class="form-check-input" role="switch" id="billArchived" onclick="archivedOnChange()"></input>
-              <label for="billArchived" class="form-check-label">Archived</label>
-            </div>
-          </div> 
-          <div class="my-3">
-            <button type="submit" class="btn btn-sm btn-primary">Submit</button>
-            <button type="button" class="btn btn-sm btn-danger" onclick="cancelAddBill()">Cancel</button>
-          </div>
-         
+
         </form>
       
         <script type="module">
@@ -163,9 +170,32 @@
           }
 
           const urlParams = new URLSearchParams(window.location.search);
-          const billId = urlParams.get("id");
-          const needURL = urlParams.get("NeedURL");
+          const explicitBillId = urlParams.get("id");
+          const explicitNeedURL = urlParams.get("NeedURL");
+          const hasStoredBillContext = sessionStorage.getItem('bt-edit-bill-context') === '1';
+          const storedBillId = sessionStorage.getItem('bt-edit-bill-id');
+          const storedReturnUrl = sessionStorage.getItem('bt-edit-bill-return-url') || "bills.html";
+          const storedTs = Number(sessionStorage.getItem('bt-edit-bill-ts') || "0");
+          const isFreshStoredContext = storedTs > 0 && (Date.now() - storedTs) < (5 * 60 * 1000);
+
+          const shouldUseStoredContext = !explicitBillId && hasStoredBillContext && !!storedBillId && isFreshStoredContext;
+
+          const billId = explicitBillId || (shouldUseStoredContext ? storedBillId : null);
+          const needURL = explicitNeedURL || (shouldUseStoredContext ? '1' : null);
+          window.billReturnUrl = (explicitNeedURL ? 'payments.html' : storedReturnUrl) || 'bills.html';
           const showNeedUrl = needURL == 1 ? true : false;
+
+          if (explicitBillId) {
+            sessionStorage.setItem('bt-edit-bill-context', '1');
+            sessionStorage.setItem('bt-edit-bill-id', String(explicitBillId));
+            sessionStorage.setItem('bt-edit-bill-return-url', explicitNeedURL ? 'payments.html' : 'bills.html');
+            sessionStorage.setItem('bt-edit-bill-ts', String(Date.now()));
+          } else if (!billId) {
+            sessionStorage.removeItem('bt-edit-bill-context');
+            sessionStorage.removeItem('bt-edit-bill-id');
+            sessionStorage.removeItem('bt-edit-bill-return-url');
+            sessionStorage.removeItem('bt-edit-bill-ts');
+          }
 
           if (billId) loadBill(billId);
 
@@ -189,12 +219,17 @@
             }else{
                 await updateBill(billId, bill);
             }
+
+            sessionStorage.removeItem('bt-edit-bill-context');
+            sessionStorage.removeItem('bt-edit-bill-id');
+            sessionStorage.removeItem('bt-edit-bill-return-url');
+            sessionStorage.removeItem('bt-edit-bill-ts');
             
             if(needURL){
               goURL(bill.url);
               window.location.href = "payments.html";
             }else{
-              window.location.href = "bills.html";
+              window.location.href = window.billReturnUrl || "bills.html";
             }
             
           });
@@ -204,7 +239,11 @@
         </script>
         <script>
             async function cancelAddBill(){
-            window.location.href = "bills.html";
+            sessionStorage.removeItem('bt-edit-bill-context');
+            sessionStorage.removeItem('bt-edit-bill-id');
+            sessionStorage.removeItem('bt-edit-bill-return-url');
+            sessionStorage.removeItem('bt-edit-bill-ts');
+            window.location.href = window.billReturnUrl || "bills.html";
           }
 
           function archivedOnChange(){

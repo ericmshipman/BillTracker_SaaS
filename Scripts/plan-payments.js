@@ -24,6 +24,139 @@ function updateModeUI() {
 }
 
 /**
+ * Load Bill History from payments for a selected date range and order
+ */
+async function loadBillHistory() {
+    const startDate = document.getElementById('historyStartDate').value;
+    const endDate = document.getElementById('historyEndDate').value;
+    const sortBy = document.getElementById('historySortBy').value;
+    const historyPreview = document.getElementById('historyPreview');
+    const historySummary = document.getElementById('historySummary');
+
+    if (!startDate || !endDate) {
+        historySummary.textContent = 'Please select both start and end dates.';
+        historyPreview.innerHTML = '';
+        return;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+        historySummary.textContent = 'Start date must be before end date.';
+        historyPreview.innerHTML = '';
+        return;
+    }
+
+    try {
+        let payments = await getPayments(startDate, endDate, 'both');
+        payments = sortHistoryPayments(payments, sortBy);
+
+        if (payments.length === 0) {
+            historySummary.textContent = 'No payments found for the selected range.';
+            historyPreview.innerHTML = '<p class="text-muted mb-0">No history to display</p>';
+            return;
+        }
+
+        historySummary.textContent = `${payments.length} payment${payments.length !== 1 ? 's' : ''} found`;
+        renderBillHistory(payments);
+    } catch (error) {
+        console.error('Error loading bill history:', error);
+        historySummary.textContent = 'Error loading history.';
+        historyPreview.innerHTML = '<p class="text-danger mb-0">Failed to load bill history.</p>';
+    }
+}
+
+/**
+ * Sort history payments in selected order
+ */
+function sortHistoryPayments(payments, sortBy) {
+    const sorted = [...payments];
+
+    sorted.sort((a, b) => {
+        switch (sortBy) {
+            case 'planned_date_asc':
+                return compareDatesAsc(a.planned_date, b.planned_date) || compareNamesAsc(a.name, b.name);
+            case 'planned_date_desc':
+                return compareDatesDesc(a.planned_date, b.planned_date) || compareNamesAsc(a.name, b.name);
+            case 'due_date_asc':
+                return compareDatesAsc(a.due_date, b.due_date) || compareNamesAsc(a.name, b.name);
+            case 'due_date_desc':
+                return compareDatesDesc(a.due_date, b.due_date) || compareNamesAsc(a.name, b.name);
+            case 'name_asc':
+                return compareNamesAsc(a.name, b.name) || compareDatesDesc(a.planned_date, b.planned_date);
+            case 'name_desc':
+                return compareNamesDesc(a.name, b.name) || compareDatesDesc(a.planned_date, b.planned_date);
+            case 'amount_asc':
+                return (Number(a.amount) || 0) - (Number(b.amount) || 0) || compareDatesDesc(a.planned_date, b.planned_date);
+            case 'amount_desc':
+                return (Number(b.amount) || 0) - (Number(a.amount) || 0) || compareDatesDesc(a.planned_date, b.planned_date);
+            default:
+                return compareDatesDesc(a.planned_date, b.planned_date) || compareNamesAsc(a.name, b.name);
+        }
+    });
+
+    return sorted;
+}
+
+function compareDatesAsc(a, b) {
+    return new Date(a) - new Date(b);
+}
+
+function compareDatesDesc(a, b) {
+    return new Date(b) - new Date(a);
+}
+
+function compareNamesAsc(a, b) {
+    return (a || '').localeCompare(b || '');
+}
+
+function compareNamesDesc(a, b) {
+    return (b || '').localeCompare(a || '');
+}
+
+/**
+ * Render bill history table
+ */
+function renderBillHistory(payments) {
+    const historyPreview = document.getElementById('historyPreview');
+
+    const rows = payments.map(payment => {
+        const plannedDate = payment.planned_date ? formatLocalDate(payment.planned_date) : '—';
+        const dueDate = payment.due_date ? formatLocalDate(payment.due_date) : '—';
+        const paidDate = payment.paid_date ? formatLocalDate(payment.paid_date) : '—';
+        const amount = Math.round(Number(payment.amount) || 0);
+        const amountClass = getAmountText(payment.paid_date);
+
+        return `
+            <tr>
+                <td>${plannedDate}</td>
+                <td>${dueDate}</td>
+                <td>${payment.name || ''}</td>
+                <td class="text-end"><span class="${amountClass}">$${amount}</span></td>
+                <td>${paidDate}</td>
+                <td>${payment.notes || ''}</td>
+            </tr>
+        `;
+    }).join('');
+
+    historyPreview.innerHTML = `
+        <table class="table table-sm table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Planned</th>
+                    <th>Due</th>
+                    <th>Name</th>
+                    <th class="text-end">Amount</th>
+                    <th>Paid</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows}
+            </tbody>
+        </table>
+    `;
+}
+
+/**
  * Generate payments for a given date range
  */
 async function generatePayments() {

@@ -328,8 +328,8 @@ async function renderItems(payments, paymentsDate) {
                         <span class="px-2 rounded hover-bg-light" role="button" onclick="visitURL('${payment.bills?.url}',${payment.bill_id})">
                             <i class="bi-globe text-primary fs-4"></i>
                         </span>
-                        <span class="px-2 rounded hover-bg-light" role="button" onclick="openReceiptModal('${payment.id}','${payment.receipt_url??""}')">
-                            <i class="${!payment.receipt_url ? "bi-link-45deg" : "bi-receipt"} text-primary fs-2"></i>
+                        <span class="px-2 rounded hover-bg-light" role="button" onclick="viewBillHistory('${payment.bill_id}')" title="View bill history">
+                            <i class="bi-clock-history text-primary fs-4"></i>
                         </span>
                     </div>
                     <div class="text-muted small">
@@ -532,8 +532,19 @@ function visitURL(url, billId){
     if (url && typeof url === "string" && url.trim().toLowerCase() !== "null") {
        goURL(url);
     } else {
-        window.location.href = "bill.html?id=" + billId + "&NeedURL=1";
+        if (billId) {
+            sessionStorage.setItem('bt-edit-bill-context', '1');
+            sessionStorage.setItem('bt-edit-bill-id', String(billId));
+            sessionStorage.setItem('bt-edit-bill-return-url', 'payments.html');
+            sessionStorage.setItem('bt-edit-bill-ts', String(Date.now()));
+        }
+        window.location.href = "bill?id=" + encodeURIComponent(billId) + "&NeedURL=1";
     }
+}
+
+async function viewBillHistory(billId){
+    sessionStorage.setItem('bt-history-bill-id', String(billId));
+    window.location.href = "history-payments?billId=" + encodeURIComponent(billId);
 }
 
 async function delPayment(id) {
@@ -545,7 +556,15 @@ async function delPayment(id) {
 }
 
 async function editItem(id){
-    window.location.href = "payment.html?id=" + id
+    if (!id) return;
+
+    const returnUrl = window.location.pathname.split('/').pop() || 'payments.html';
+    sessionStorage.setItem('bt-edit-context', '1');
+    sessionStorage.setItem('bt-edit-payment-id', String(id));
+    sessionStorage.setItem('bt-edit-return-url', returnUrl);
+    sessionStorage.setItem('bt-edit-ts', String(Date.now()));
+
+    window.location.href = "payment?id=" + encodeURIComponent(id) + "&returnUrl=" + encodeURIComponent(returnUrl);
 }
 
 async function markPaid(id, paid_date, autopay, due_date){
@@ -558,7 +577,11 @@ async function markPaid(id, paid_date, autopay, due_date){
 }
 
 async function startAddItem(){
-    window.location.href = "payment.html";
+    sessionStorage.removeItem('bt-edit-context');
+    sessionStorage.removeItem('bt-edit-payment-id');
+    sessionStorage.removeItem('bt-edit-return-url');
+    sessionStorage.removeItem('bt-edit-ts');
+    window.location.href = "payment";
 }
 
 function PlanOrPaid(paid, planned) {

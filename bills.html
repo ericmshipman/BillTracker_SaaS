@@ -86,20 +86,25 @@
           </div>
         </div>
       </nav>
-    <div class="container my-4">
+    <div class="container my-4" style="padding-bottom: 110px;">
         <div class="m-2 mb-3">
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" id="showArchived" onchange="renderBills()">
                 <label class="form-check-label" for="showArchived">Show Archived</label>
-              </div>
+            </div>
         </div>
         <ul class="list-group" id="billList"></ul>
-        <button class="btn btn-primary w-100 mt-4" onclick="startAddBill()">+ Add Bill</button>
+
+        <div class="fixed-bottom border-top bg-body p-2">
+            <div class="container">
+                <button class="btn btn-primary w-100 my-4" onclick="startAddBill()">+ Add Bill</button>
+            </div>
+        </div>
         <style>
             .list-group-item {
                 border: none;
                 border-bottom: 1px solid #eee;
-                }
+            }
         </style>
     </div>
       <script> 
@@ -186,11 +191,22 @@
         }}
 
         async function editBill(id){
-            window.location.href = "bill.html?id=" + id
+            if (!id) return;
+
+            sessionStorage.setItem('bt-edit-bill-context', '1');
+            sessionStorage.setItem('bt-edit-bill-id', String(id));
+            sessionStorage.setItem('bt-edit-bill-return-url', 'bills.html');
+            sessionStorage.setItem('bt-edit-bill-ts', String(Date.now()));
+
+            window.location.href = "bill?id=" + encodeURIComponent(id);
         }
 
         async function startAddBill(){
-            window.location.href = "bill.html";
+            sessionStorage.removeItem('bt-edit-bill-context');
+            sessionStorage.removeItem('bt-edit-bill-id');
+            sessionStorage.removeItem('bt-edit-bill-return-url');
+            sessionStorage.removeItem('bt-edit-bill-ts');
+            window.location.href = "bill";
         }
         
         (async () => {
