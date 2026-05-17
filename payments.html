@@ -60,6 +60,14 @@
     </head>
 
 <body>
+    <script>
+        (function () {
+            const ui = localStorage.getItem('bt-payments-ui') || 'old';
+            if (ui === 'new') {
+                window.location.replace('payments2.html');
+            }
+        })();
+    </script>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="index.html">

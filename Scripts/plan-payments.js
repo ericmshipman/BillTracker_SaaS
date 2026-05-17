@@ -4,6 +4,29 @@ let generatedPayments = [];
 let groupedPayments = {};
 let generationMode = 'bills'; // 'bills' or 'payments'
 
+function parseLocalYmd(value) {
+    if (value instanceof Date) {
+        return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+    }
+
+    const raw = String(value || '').split('T')[0];
+    const parts = raw.split('-').map(Number);
+    if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+        const [y, m, d] = parts;
+        return new Date(y, m - 1, d);
+    }
+
+    const parsed = new Date(value);
+    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+}
+
+function formatLocalYmd(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
 /**
  * Update UI based on selected generation mode
  */
@@ -173,12 +196,24 @@ async function generatePayments() {
             const endDate = document.getElementById('endDate').value;
             
             if (!startDate || !endDate) {
-                alert('Please select both start and end dates');
+                await showSiteModalAlert({
+                    title: 'Missing Dates',
+                    message: 'Please select both start and end dates.',
+                    confirmText: 'OK',
+                    confirmVariant: 'warning',
+                    showCancel: false
+                });
                 return;
             }
             
             if (new Date(startDate) > new Date(endDate)) {
-                alert('Start date must be before end date');
+                await showSiteModalAlert({
+                    title: 'Invalid Date Range',
+                    message: 'Start date must be before end date.',
+                    confirmText: 'OK',
+                    confirmVariant: 'warning',
+                    showCancel: false
+                });
                 return;
             }
             
@@ -190,17 +225,35 @@ async function generatePayments() {
             const iterateUnit = document.getElementById('iterateUnit').value;
             
             if (!copyStartDate || !copyEndDate) {
-                alert('Please select both copy start and end dates');
+                await showSiteModalAlert({
+                    title: 'Missing Dates',
+                    message: 'Please select both copy start and end dates.',
+                    confirmText: 'OK',
+                    confirmVariant: 'warning',
+                    showCancel: false
+                });
                 return;
             }
             
             if (new Date(copyStartDate) > new Date(copyEndDate)) {
-                alert('Copy start date must be before copy end date');
+                await showSiteModalAlert({
+                    title: 'Invalid Date Range',
+                    message: 'Copy start date must be before copy end date.',
+                    confirmText: 'OK',
+                    confirmVariant: 'warning',
+                    showCancel: false
+                });
                 return;
             }
             
             if (!iterateAmount || iterateAmount < 1) {
-                alert('Please enter a valid iteration amount');
+                await showSiteModalAlert({
+                    title: 'Invalid Increment',
+                    message: 'Please enter a valid iteration amount.',
+                    confirmText: 'OK',
+                    confirmVariant: 'warning',
+                    showCancel: false
+                });
                 return;
             }
             
@@ -278,8 +331,8 @@ async function generatePaymentsFromPayments(copyStartDate, copyEndDate, iterateA
     
     for (const payment of existingPayments) {
         // Parse the payment's dates
-        const originalDueDate = new Date(payment.due_date);
-        const originalPlannedDate = payment.planned_date ? new Date(payment.planned_date) : null;
+        const originalDueDate = parseLocalYmd(payment.due_date);
+        const originalPlannedDate = payment.planned_date ? parseLocalYmd(payment.planned_date) : null;
         
         // Shift dates forward
         const newDueDate = new Date(originalDueDate);
@@ -297,14 +350,14 @@ async function generatePaymentsFromPayments(copyStartDate, copyEndDate, iterateA
             } else {
                 newPlannedDate.setMonth(newPlannedDate.getMonth() + iterateAmount);
             }
-            finalPlannedDate = newPlannedDate.toISOString().split('T')[0];
+            finalPlannedDate = formatLocalYmd(newPlannedDate);
         } else {
             // If no planned_date, calculate it based on pay_period
             const bill = await getBillById(payment.bill_id);
             if (bill) {
                 finalPlannedDate = calculatePlannedDate(newDueDate, bill.pay_period);
             } else {
-                finalPlannedDate = newDueDate.toISOString().split('T')[0];
+                finalPlannedDate = formatLocalYmd(newDueDate);
             }
         }
         
@@ -314,7 +367,7 @@ async function generatePaymentsFromPayments(copyStartDate, copyEndDate, iterateA
             name: payment.name, // Preserve modified name
             amount: payment.amount, // Preserve modified amount
             planned_date: finalPlannedDate,
-            due_date: newDueDate.toISOString().split('T')[0],
+            due_date: formatLocalYmd(newDueDate),
             notes: payment.notes || '', // Preserve modified notes
             paid_date: null, // Always null for new payments
             receipt_url: null, // Always null for new payments
@@ -340,14 +393,15 @@ async function generatePaymentsFromPayments(copyStartDate, copyEndDate, iterateA
  */
 function calculatePaymentsForBill(bill, startDate, endDate) {
     const payments = [];
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = parseLocalYmd(startDate);
+    const end = parseLocalYmd(endDate);
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
     
     // Parse bill's due_date as starting point
-    const billStartDate = new Date(bill.due_date);
+    const billStartDate = parseLocalYmd(bill.due_date);
     billStartDate.setHours(0, 0, 0, 0);
+    const anchorDay = billStartDate.getDate();
     
     // Find the first occurrence within or before the range
     let currentDate = new Date(billStartDate);
@@ -360,13 +414,13 @@ function calculatePaymentsForBill(bill, startDate, endDate) {
     // If bill starts before the range, find first occurrence in range
     if (currentDate < start) {
         while (currentDate < start) {
-            currentDate = addRecurrencePeriod(currentDate, bill.occurs_every, bill.occurs_every_unit);
+            currentDate = addRecurrencePeriod(currentDate, bill.occurs_every, bill.occurs_every_unit, anchorDay);
         }
     }
     
     // Generate all payments within range
     while (currentDate <= end) {
-        const dateStr = currentDate.toISOString().split('T')[0];
+        const dateStr = formatLocalYmd(currentDate);
         
         // Calculate planned_date based on pay_period
         const plannedDate = calculatePlannedDate(currentDate, bill.pay_period);
@@ -384,7 +438,7 @@ function calculatePaymentsForBill(bill, startDate, endDate) {
         });
         
         // Move to next occurrence
-        currentDate = addRecurrencePeriod(currentDate, bill.occurs_every, bill.occurs_every_unit);
+        currentDate = addRecurrencePeriod(currentDate, bill.occurs_every, bill.occurs_every_unit, anchorDay);
     }
     
     return payments;
@@ -395,14 +449,15 @@ function calculatePaymentsForBill(bill, startDate, endDate) {
  */
 function calculatePaymentsFromPayment(payment, bill, copyFromDate, generateUntilDate) {
     const payments = [];
-    const start = new Date(copyFromDate);
-    const end = new Date(generateUntilDate);
+    const start = parseLocalYmd(copyFromDate);
+    const end = parseLocalYmd(generateUntilDate);
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
     
     // Use the payment's actual due_date as the starting point
-    const paymentDueDate = new Date(payment.due_date);
+    const paymentDueDate = parseLocalYmd(payment.due_date);
     paymentDueDate.setHours(0, 0, 0, 0);
+    const anchorDay = paymentDueDate.getDate();
     
     // Find the first occurrence after the copy-from date
     let currentDate = new Date(paymentDueDate);
@@ -410,13 +465,13 @@ function calculatePaymentsFromPayment(payment, bill, copyFromDate, generateUntil
     // If payment is before the copy-from date, find first occurrence after
     if (currentDate < start) {
         while (currentDate < start) {
-            currentDate = addRecurrencePeriod(currentDate, bill.occurs_every, bill.occurs_every_unit);
+            currentDate = addRecurrencePeriod(currentDate, bill.occurs_every, bill.occurs_every_unit, anchorDay);
         }
     }
     
     // Generate all payments within range
     while (currentDate <= end) {
-        const dateStr = currentDate.toISOString().split('T')[0];
+        const dateStr = formatLocalYmd(currentDate);
         
         // Calculate planned_date based on pay_period
         const plannedDate = calculatePlannedDate(currentDate, bill.pay_period);
@@ -434,7 +489,7 @@ function calculatePaymentsFromPayment(payment, bill, copyFromDate, generateUntil
         });
         
         // Move to next occurrence
-        currentDate = addRecurrencePeriod(currentDate, bill.occurs_every, bill.occurs_every_unit);
+        currentDate = addRecurrencePeriod(currentDate, bill.occurs_every, bill.occurs_every_unit, anchorDay);
     }
     
     return payments;
@@ -446,27 +501,37 @@ function calculatePaymentsFromPayment(payment, bill, copyFromDate, generateUntil
  * pay_period 2 = last day of the month
  */
 function calculatePlannedDate(dueDate, payPeriod) {
-    const date = new Date(dueDate);
+    const date = parseLocalYmd(dueDate);
+    date.setHours(0, 0, 0, 0);
     const year = date.getFullYear();
     const month = date.getMonth();
     
     if (payPeriod == 1) {
-        // 15th of the month
-        return new Date(year, month, 15).toISOString().split('T')[0];
+        // Use the 15th period on or before due date
+        let planned = new Date(year, month, 15);
+        if (planned > date) {
+            planned = new Date(year, month - 1, 15);
+        }
+        return formatLocalYmd(planned);
     } else if (payPeriod == 2) {
-        // Last day of the month
-        return new Date(year, month + 1, 0).toISOString().split('T')[0];
+        // Use the month-end period on or before due date
+        let planned = new Date(year, month + 1, 0);
+        if (planned > date) {
+            planned = new Date(year, month, 0);
+        }
+        return formatLocalYmd(planned);
     } else {
         // Default to due date if pay_period is not 1 or 2
-        return date.toISOString().split('T')[0];
+        return formatLocalYmd(date);
     }
 }
 
 /**
  * Add recurrence period to a date
  */
-function addRecurrencePeriod(date, occursEvery, occursEveryUnit) {
+function addRecurrencePeriod(date, occursEvery, occursEveryUnit, anchorDay = null) {
     const newDate = new Date(date);
+    const targetDay = anchorDay || date.getDate();
     
     switch (occursEveryUnit) {
         case 'Day':
@@ -476,14 +541,18 @@ function addRecurrencePeriod(date, occursEvery, occursEveryUnit) {
             newDate.setDate(newDate.getDate() + (occursEvery * 7));
             break;
         case 'Month':
+            // Keep due day anchored to the bill/payment start day and clamp to month end
+            newDate.setDate(1);
             newDate.setMonth(newDate.getMonth() + occursEvery);
-            // Handle month-end edge cases (e.g., Jan 31 + 1 month = Feb 28/29)
-            if (newDate.getDate() !== date.getDate()) {
-                newDate.setDate(0); // Go to last day of previous month
-            }
+            const lastDayOfMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
+            newDate.setDate(Math.min(targetDay, lastDayOfMonth));
             break;
         case 'Year':
-            newDate.setFullYear(newDate.getFullYear() + occursEvery);
+            // Keep month and anchored due day; clamp for leap-year/month-end cases
+            const targetYear = newDate.getFullYear() + occursEvery;
+            const targetMonth = newDate.getMonth();
+            const lastDayOfTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+            newDate.setFullYear(targetYear, targetMonth, Math.min(targetDay, lastDayOfTargetMonth));
             break;
         default:
             console.warn('Unknown recurrence unit:', occursEveryUnit);
@@ -744,11 +813,26 @@ async function saveSelectedPayments() {
     const selectedPayments = generatedPayments.filter(p => p.selected);
     
     if (selectedPayments.length === 0) {
-        alert('No payments selected');
+        await showSiteModalAlert({
+            title: 'Nothing Selected',
+            message: 'No payments selected.',
+            confirmText: 'OK',
+            confirmVariant: 'warning',
+            showCancel: false
+        });
         return;
     }
     
-    if (!confirm(`Are you sure you want to create ${selectedPayments.length} payment(s)?`)) {
+    const shouldCreate = await showSiteModalAlert({
+        title: 'Create Payments',
+        message: `Are you sure you want to create ${selectedPayments.length} payment(s)?`,
+        confirmText: 'Create',
+        cancelText: 'Cancel',
+        confirmVariant: 'primary',
+        showCancel: true
+    });
+
+    if (!shouldCreate) {
         return;
     }
     
@@ -783,14 +867,32 @@ async function saveSelectedPayments() {
         }
         
         if (errorCount === 0) {
-            alert(`Successfully created ${successCount} payment(s)!`);
+            await showSiteModalAlert({
+                title: 'Success',
+                message: `Successfully created ${successCount} payment(s)!`,
+                confirmText: 'OK',
+                confirmVariant: 'success',
+                showCancel: false
+            });
             window.location.href = 'payments.html';
         } else {
-            alert(`Created ${successCount} payment(s), but ${errorCount} failed. Please check the console for details.`);
+            await showSiteModalAlert({
+                title: 'Partial Success',
+                message: `Created ${successCount} payment(s), but ${errorCount} failed. Please check the console for details.`,
+                confirmText: 'OK',
+                confirmVariant: 'warning',
+                showCancel: false
+            });
         }
     } catch (error) {
         console.error('Error saving payments:', error);
-        alert('Error saving payments: ' + error.message);
+        await showSiteModalAlert({
+            title: 'Save Failed',
+            message: 'Error saving payments: ' + error.message,
+            confirmText: 'OK',
+            confirmVariant: 'danger',
+            showCancel: false
+        });
         saveButton.disabled = false;
         saveButton.innerHTML = '<i class="bi-save"></i> Save Selected Payments';
     }

@@ -81,7 +81,13 @@
         await login(email, password);
         window.location.href = "payments.html";
       } catch (error) {
-        alert('Login failed: ' + error.message);
+        await showSiteModalAlert({
+          title: 'Login Failed',
+          message: 'Login failed: ' + error.message,
+          confirmText: 'OK',
+          showCancel: false,
+          confirmVariant: 'danger'
+        });
       }
     });
   

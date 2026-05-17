@@ -548,7 +548,16 @@ async function viewBillHistory(billId){
 }
 
 async function delPayment(id) {
-    if (confirm("Are you sure you want to delete this payment?")) {
+    const shouldDelete = await showSiteModalAlert({
+        title: "Delete Payment",
+        message: "Are you sure you want to delete this payment?",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+        confirmVariant: "danger",
+        showCancel: true
+    });
+
+    if (shouldDelete) {
         await deletePayment(id);
         const select = document.getElementById('plannedDateSelect');
         refreshPmts();

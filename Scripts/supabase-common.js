@@ -8,7 +8,13 @@ const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 async function logout(){
   const {error} = await supabaseClient.auth.signOut();
   if(error){
-    alert('Logout Failed: ' + error.message);
+    await showSiteModalAlert({
+      title: 'Logout Failed',
+      message: 'Logout failed: ' + error.message,
+      confirmText: 'OK',
+      showCancel: false,
+      confirmVariant: 'danger'
+    });
   }else{
     window.location.href = "login.html";
   }

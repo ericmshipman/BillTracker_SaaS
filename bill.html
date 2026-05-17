@@ -144,7 +144,13 @@
           async function loadBill(id){
             const bill = await getBillById(id);
             if(!bill){
-                alert("Bill not found");
+                await showSiteModalAlert({
+                    title: "Bill Not Found",
+                    message: "Bill not found.",
+                    confirmText: "OK",
+                    showCancel: false,
+                    confirmVariant: "warning"
+                });
                 return;
             }
 

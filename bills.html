@@ -185,10 +185,20 @@
         }
         
         async function delBill(id) {
-        if (confirm("Are you sure you want to delete this bill?")) {
-            await deleteBill(id);
-            await renderBills();
-        }}
+            const shouldDelete = await showSiteModalAlert({
+                title: "Delete Bill",
+                message: "Are you sure you want to delete this bill?",
+                confirmText: "Delete",
+                cancelText: "Cancel",
+                confirmVariant: "danger",
+                showCancel: true
+            });
+
+            if (shouldDelete) {
+                await deleteBill(id);
+                await renderBills();
+            }
+        }
 
         async function editBill(id){
             if (!id) return;

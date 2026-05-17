@@ -118,7 +118,7 @@
                 </div>
 
                 <div class="fixed-bottom border-top bg-body p-2">
-                    <div class="container ">
+                    <div class="container">
                         <button type="submit" class="btn btn-sm btn-primary my-4">Submit</button>
                         <button type="button" class="btn btn-sm btn-secondary my-4" onclick="cancelAddPayment()">Cancel</button>
                         <button type="button" class="btn btn-sm btn-danger my-4" id="deletePaymentBtn" style="display:none;">
@@ -193,11 +193,11 @@
           if (deletePaymentBtn && paymentId) {
             deletePaymentBtn.style.display = "inline-block";
             deletePaymentBtn.addEventListener("click", async () => {
-              if (!confirm("Are you sure you want to delete this payment?")) {
-                return;
-              }
+              //if (!confirm("Are you sure you want to delete this payment?")) {
+              //  return;
+              //}
 
-              await deletePayment(paymentId);
+              await delPayment(paymentId);
               sessionStorage.removeItem('bt-edit-context');
               sessionStorage.removeItem('bt-edit-payment-id');
               sessionStorage.removeItem('bt-edit-return-url');

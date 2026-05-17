@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payments v2</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <!-- Existing app scripts -->
+  <script src="Scripts/supabase-auth.js"></script>
+  <script src="Scripts/supabase-common.js"></script>
+
+  <!-- Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+  <!-- Theme -->
+  <script src="Scripts/theme.js"></script>
+  <link id="themeStylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script>
+    let theme = localStorage.getItem('bt-theme');
+    if (!theme || !(theme in themeUrls)) theme = 'bootstrap';
+    let link = document.getElementById('themeStylesheet');
+    if (!link) {
+      link = document.createElement('link');
+      link.id = 'themeStylesheet';
+      link.rel = 'stylesheet';
+      document.head.appendChild(link);
+    }
+    link.href = themeUrls[theme];
+  </script>
+
+  <link rel="stylesheet" href="CSS/style.css" />
+  <script src="Scripts/script.js"></script>
+  <script src="Scripts/payments.js"></script>
+  <script src="Scripts/icon.js"></script>
+
+  <style>
+    body {
+      background: var(--bs-tertiary-bg);
+      min-height: 100vh;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+
+    .app-shell { width: 100%; max-width: 1200px; }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--bs-tertiary-bg);
+    }
+
+    .view-panel { display: none; }
+    .view-panel.active { display: block; }
+
+    .view-toggle .btn {
+      width: 2rem;
+      height: 2rem;
+      --bs-btn-padding-x: 0;
+      --bs-btn-padding-y: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0;
+      transition: all .14s ease;
+    }
+
+    .view-toggle.btn-group {
+      border-radius: .55rem;
+      overflow: hidden;
+    }
+
+    .view-toggle.btn-group > .btn:first-child {
+      border-top-left-radius: .55rem;
+      border-bottom-left-radius: .55rem;
+    }
+
+    .view-toggle.btn-group > .btn:last-child {
+      border-top-right-radius: .55rem;
+      border-bottom-right-radius: .55rem;
+    }
+
+    .view-toggle .btn.active {
+      color: var(--bs-white);
+      background: var(--bs-primary);
+      border-color: var(--bs-primary);
+      box-shadow: 0 1px 2px rgba(0,0,0,.08);
+    }
+
+    .pay-visibility-toggle {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .pay-visibility-toggle .form-check-input {
+      margin-top: 0;
+      width: 2em;
+      height: 1.05em;
+      cursor: pointer;
+      border-radius: .75rem;
+    }
+
+
+    .pay-visibility-toggle .form-check-label {
+      margin-bottom: 0;
+      font-size: .85rem;
+      color: var(--bs-secondary-color);
+    }
+
+    .summary-card, .filter-card {
+      border: 0;
+      border-radius: .85rem;
+      background-color: var(--bs-body-bg) !important;
+      border: 1px solid var(--bs-border-color-translucent);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .06);
+      transition: box-shadow .14s ease, border-color .14s ease;
+    }
+
+    .filter-scroll {
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+
+    .summary-label,
+    .section-label,
+    .detail-title {
+      color: var(--bs-secondary-color);
+      font-size: .68rem;
+      font-weight: 640;
+      letter-spacing: .025em;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+
+    .summary-value {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1;
+    }
+
+    .payment-group-card {
+      border: 0;
+      border-radius: .85rem;
+      overflow: hidden;
+      background-color: var(--bs-body-bg) !important;
+      border: 1px solid var(--bs-border-color-translucent);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .06);
+    }
+
+    .payment-row {
+      min-height: 3.15rem;
+      cursor: pointer;
+      position: relative;
+      --status-accent: transparent;
+      padding-left: 1rem !important;
+      transition: background-color .12s ease;
+    }
+
+    .payment-row:hover {
+      background-color: rgba(var(--bs-secondary-bg-rgb), .6);
+    }
+
+    .payment-row.payment-tone-paid {
+      --status-accent: rgba(34, 193, 34, 0.75);
+    }
+
+    .payment-row.payment-tone-late {
+      --status-accent: rgba(220, 53, 69, 0.78);
+    }
+
+    .payment-row.payment-tone-paid-late {
+      --status-accent: rgba(255, 193, 7, 0.82);
+    }
+
+    .payment-row::before {
+      content: "";
+      position: absolute;
+      left: .34rem;
+      top: .52rem;
+      bottom: .52rem;
+      width: 1px;
+      border-radius: 999px;
+      background: var(--status-accent);
+      opacity: .88;
+    }
+
+    .payment-row + .payment-row {
+      border-top: var(--bs-border-width) solid var(--bs-border-color-translucent);
+    }
+
+    .payment-main {
+      font-size: .92rem;
+      font-weight: 620;
+      letter-spacing: -.018em;
+      line-height: 1.18;
+    }
+
+    .payment-sub,
+    .date-line {
+      color: var(--bs-secondary-color);
+      font-size: .7rem;
+      line-height: 1.15;
+    }
+
+    .payment-mini-actions {
+      margin-top: .2rem;
+      display: flex;
+      gap: .35rem;
+      flex-wrap: wrap;
+    }
+
+    .payment-mini-actions .btn {
+      --bs-btn-padding-y: .12rem;
+      --bs-btn-padding-x: .28rem;
+      --bs-btn-font-size: .72rem;
+      color: var(--bs-secondary-color);
+      border: 0;
+      transition: all .12s ease;
+    }
+
+    .payment-mini-actions .btn:hover,
+    .payment-mini-actions .btn:focus {
+      color: var(--bs-body-color);
+      background: var(--bs-secondary-bg);
+      border-radius: .35rem;
+    }
+
+    .amount {
+      font-size: .94rem;
+      font-weight: 700;
+      letter-spacing: -.03em;
+      line-height: 1;
+    }
+
+    .payment-right { min-width: 4.75rem; }
+
+    .payment-row .min-w-0 {
+      min-width: 0;
+    }
+
+    .payment-right {
+      width: 6.25rem;
+      min-width: 6.25rem;
+      margin-left: auto;
+    }
+
+    .payment-right .amount,
+    .payment-right .date-line {
+      display: block;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .payment-row.is-paid { opacity: 1; }
+
+    .detail-table-shell {
+      border-radius: .85rem;
+      overflow: hidden;
+      background-color: var(--bs-body-bg) !important;
+      border: 1px solid var(--bs-border-color-translucent);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .06);
+    }
+
+    #groupView .row {
+      --bs-gutter-x: 1rem;
+      --bs-gutter-y: .75rem;
+    }
+
+    .detail-table {
+      table-layout: fixed;
+      font-size: .67rem;
+      line-height: 1.12;
+      margin-bottom: 0;
+    }
+
+    .detail-table th,
+    .detail-table td {
+      padding: .3rem .34rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+
+    .detail-table th {
+      color: var(--bs-secondary-color);
+      font-weight: 620;
+    }
+
+    .detail-table tbody tr.detail-tone-paid {
+      box-shadow: inset 2px 0 0 rgba(34, 193, 34, 0.45);
+    }
+
+    .detail-table tbody tr.detail-tone-late {
+      box-shadow: inset 2px 0 0 rgba(220, 53, 69, 0.5);
+    }
+
+    .detail-table tbody tr.detail-tone-paid-late {
+      box-shadow: inset 2px 0 0 rgba(255, 193, 7, 0.58);
+    }
+
+    .detail-table .bill-col { width: 30%; }
+    .detail-table .notes-col { width: 20%; }
+    .detail-table .date-col { width: 11%; }
+    .detail-table .paid-col { width: 11%; }
+    .detail-table .amount-col { width: 17%; }
+
+    @media (max-width: 520px) {
+      .payment-right {
+        width: 5.25rem;
+        min-width: 5.25rem;
+      }
+
+      .detail-table .notes-col,
+      .detail-table .notes-cell {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    (function () {
+      const ui = localStorage.getItem('bt-payments-ui') || 'old';
+      if (ui !== 'new') {
+        window.location.replace('payments.html');
+      }
+    })();
+  </script>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="index.html">
+        <svg class="icon icon-logo" width="30" height="30" aria-hidden="true"><use href="#logo-symbol"></use></svg>
+        <span class="mx-2">Payments</span>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="bills.html">Bills</a></li>
+          <li class="nav-item"><a class="nav-link active" href="payments2.html">Payments</a></li>
+          <li class="nav-item"><a class="nav-link" href="plan-payments.html">Plan</a></li>
+          <li class="nav-item"><a class="nav-link" href="settings.html">Settings</a></li>
+          <li class="nav-item"><a class="nav-link" href="logout.html">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="app-shell mx-auto px-2 px-md-3 pb-2 pb-md-3 pt-0">
+    <header class="app-header mt-0 pt-1 pt-md-1 pb-2">
+      <div class="my-2 d-flex justify-content-between align-items-center">
+        <div class="form-check form-switch pay-visibility-toggle">
+          <input class="form-check-input" type="checkbox" id="showPaidVisual" onchange="toggleShowPaidVisual()">
+          <label class="form-check-label" for="showPaidVisual" id="showPaidVisualLabel">Show Paid</label>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <div class="view-toggle btn-group btn-group-sm" role="group" aria-label="Toggle payment view">
+            <button id="groupBtn" class="btn btn-outline-primary active" type="button" onclick="setPayments2View('group')" title="Grouped view">
+              <i class="bi bi-list-ul"></i>
+            </button>
+            <button id="detailBtn" class="btn btn-outline-primary" type="button" onclick="setPayments2View('detail')" title="Detail grid">
+              <i class="bi bi-table"></i>
+            </button>
+          </div>
+
+          <button class="btn btn-primary rounded-3 d-inline-flex align-items-center justify-content-center p-0" style="width:2rem;height:2rem;" onclick="startAddItem()" aria-label="Add payment">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="row g-2 mb-2">
+        <div class="col-4">
+          <div class="summary-card card bg-body">
+            <div class="card-body p-2">
+              <div class="summary-label">Paid</div>
+              <div id="paidTotalV2" class="summary-value text-success text-truncate mt-1">$0.00</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="summary-card card bg-body">
+            <div class="card-body p-2">
+              <div class="summary-label">Planned</div>
+              <div id="plannedTotalV2" class="summary-value text-truncate mt-1">$0.00</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="summary-card card bg-body">
+            <div class="card-body p-2">
+              <div class="summary-label">Left</div>
+              <div id="leftTotalV2" class="summary-value text-truncate mt-1">$0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-card card bg-body">
+        <div class="card-body p-2">
+          <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+            <div class="summary-label">Planned Date</div>
+            <button class="btn btn-link btn-sm text-decoration-none p-0 summary-label" type="button" onclick="resetFilterState()">Reset</button>
+          </div>
+
+          <div id="plannedDateChips" class="filter-scroll d-flex gap-2 pb-1"></div>
+        </div>
+      </div>
+
+      <!-- Hidden compatibility elements required by existing payments.js -->
+      <div class="d-none">
+        <input id="showPaid" type="checkbox" onchange="onShowPaidChange()">
+        <label id="showPaidLabel">Show Paid</label>
+        <select id="plannedDateSelect" multiple onchange="onPlannedDateChange()"></select>
+        <ul id="itemlist"></ul>
+        <div id="totalPaid"></div>
+        <div id="totalPlanned"></div>
+      </div>
+    </header>
+
+    <section id="groupView" class="view-panel active mt-2"></section>
+    <section id="detailView" class="view-panel mt-2"></section>
+  </main>
+
+  <!-- Keep existing modal hooks available -->
+  <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="receiptModalLabel">Add Receipt Link</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="url" id="receipt-url-input" class="form-control" placeholder="Paste receipt URL here..." />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveReceiptLink()">Save Link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="Scripts/payments2.js"></script>
+  <script>
+    (async () => {
+      await redirectIfNotLoggedIn();
+      await applySavedTheme();
+      initPaymentsPage();
+    })();
+  </script>
+</body>
+</html>
